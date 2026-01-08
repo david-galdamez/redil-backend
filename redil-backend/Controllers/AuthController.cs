@@ -1,8 +1,10 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using redil_backend.Dtos.Auth;
 using redil_backend.Dtos.Responses;
+using redil_backend.Services;
 using redil_backend.Services.Auth;
 
 namespace redil_backend.Controllers
@@ -11,16 +13,16 @@ namespace redil_backend.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        IAuthService<UserDto, AuthRegisterDto, AuthLoginDto> _authService;
+        IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto> _authService;
         private IValidator<AuthLoginDto> _loginValidator;
 
-        public AuthController(IAuthService<UserDto, AuthRegisterDto, AuthLoginDto> authService)
+        public AuthController(IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto> authService)
         {
             _authService = authService;
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResponse<UserDto>>> Login(AuthLoginDto authLoginDto)
+        public async Task<ActionResult<ApiResponse<UserDto>>> Login([FromBody]AuthLoginDto authLoginDto)
         {
             var validationResult = await _loginValidator.ValidateAsync(authLoginDto);
             if (!validationResult.IsValid)
@@ -37,21 +39,29 @@ namespace redil_backend.Controllers
                 });
             }
 
-            var userDto = await _authService.Login(authLoginDto);
-            if (userDto == null)
+            var loginResult = await _authService.Login(authLoginDto);
+            if (!loginResult.Success || loginResult.Data == null)
             {
                 return Unauthorized(new ApiResponse<UserDto>
                 {
                     Success = false,
-                    Message = "Credenciales inválidas",
+                    Message = loginResult.ErrorMessage
                 });
             }
+
+            HttpContext.Response.Cookies.Append("access_token", loginResult.Data.accessToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+            });
 
             return Ok(new ApiResponse<UserDto>
             {
                 Success = true,
                 Message = "Login exitoso",
-                Data = userDto
+                Data = loginResult.Data.user
             });
         }
 
@@ -65,6 +75,7 @@ namespace redil_backend.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
+            Response.Cookies.Delete("access_token");
 
             return Ok();
         }
