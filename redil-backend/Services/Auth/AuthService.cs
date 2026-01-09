@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
 using redil_backend.Mappers.Auth;
 using redil_backend.Models;
@@ -19,9 +20,20 @@ namespace redil_backend.Services.Auth
             _tokenProvider = tokenProvider;
         }
 
-        public Task<ServiceResult<UserDto>> Register(AuthRegisterDto authRegisterDto)
+        public async Task<ServiceResult<UserDto>> Register(AuthRegisterDto authRegisterDto)
         {
-            throw new NotImplementedException();
+            var user = authRegisterDto.ToUserModel(UserRole.Admin);
+
+            var hashedPassword = _passwordHasher.HashPassword(user, authRegisterDto.Password);
+
+            user.password = hashedPassword;
+
+            await _authRepository.Add(user);
+            await _authRepository.Save();
+
+            var userDto = user.ToUserDto();
+
+            return ServiceResult<UserDto>.Ok(userDto);;
         }
 
         public async Task<ServiceResult<AuthLoginResult>> Login(AuthLoginDto authLoginDto)
@@ -29,13 +41,13 @@ namespace redil_backend.Services.Auth
             var user = await _authRepository.GetUserByEmail(authLoginDto.Email);
             if( user == null)
             {
-                return ServiceResult<AuthLoginResult>.Fail("Invalid email.");
+                return ServiceResult<AuthLoginResult>.Fail("Correo invalido o no existe");
             }
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.password, authLoginDto.Password); 
             if(result == PasswordVerificationResult.Failed)
             {
-                return ServiceResult<AuthLoginResult>.Fail("Invalid password.");
+                return ServiceResult<AuthLoginResult>.Fail("Contraseña incorrecta");
             }
 
             var userDto = user.ToUserDto();
@@ -45,6 +57,13 @@ namespace redil_backend.Services.Auth
             var loginResult = new AuthLoginResult(userDto, token);
 
             return ServiceResult<AuthLoginResult>.Ok(loginResult);
+        }
+
+        public async Task<bool> ValidateEmail(string email)
+        {
+            var result = await _authRepository.GetUserByEmail(email);
+
+            return result == null;
         }
     }
 }

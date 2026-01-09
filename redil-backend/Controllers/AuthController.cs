@@ -15,10 +15,17 @@ namespace redil_backend.Controllers
     {
         IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto> _authService;
         private IValidator<AuthLoginDto> _loginValidator;
+        private IValidator<AuthRegisterDto> _registerValidator;
 
-        public AuthController(IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto> authService)
+        public AuthController(
+            IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto> authService,
+            IValidator<AuthLoginDto> loginValidator,
+            IValidator<AuthRegisterDto> registerValidator
+            )
         {
             _authService = authService;
+            _loginValidator = loginValidator;
+            _registerValidator = registerValidator;
         }
 
         [HttpPost("login")]
@@ -61,23 +68,64 @@ namespace redil_backend.Controllers
             {
                 Success = true,
                 Message = "Login exitoso",
-                Data = loginResult.Data.user
             });
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(AuthRegisterDto authRegisterDto)
+        [HttpPost("register_admin")]
+        public async Task<ActionResult<ApiResponse<UserDto>>> Register([FromBody]AuthRegisterDto authRegisterDto)
         {
+            var validationResult = await _registerValidator.ValidateAsync(authRegisterDto);
+            if(!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<UserDto>
+                {
+                    Success = false,
+                    Message = "Errores de validación",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList(),
+                });
+            }
 
-            return Ok();
+            var validateEmail = await _authService.ValidateEmail(authRegisterDto.Email);
+            if(!validateEmail)
+            {
+                return Conflict(new ApiResponse<UserDto>
+                {
+                    Success = false,
+                    Message = "El correo electrónico ya está en uso"
+                });
+            }
+
+            var registerResult = await _authService.Register(authRegisterDto);
+            if(!registerResult.Success || registerResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<UserDto>
+                {
+                    Success = false,
+                    Message = registerResult.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<UserDto>
+            {
+                    Success = true,
+                    Message = "Registro exitoso",
+            });
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public async Task<ActionResult<ApiResponse<UserDto>>> Logout()
         {
             Response.Cookies.Delete("access_token");
 
-            return Ok();
+            return Ok(new ApiResponse<UserDto>
+            {
+                Success = true,
+                Message = "Cierre de sesion exitoso",
+            });
         }
     }
 }

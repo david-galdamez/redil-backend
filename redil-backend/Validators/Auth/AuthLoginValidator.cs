@@ -7,10 +7,10 @@ namespace redil_backend.Validators.Auth
     {
         public AuthLoginValidator()
         {
-            RuleFor(x => x.Email).NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Invalid email format.");
-            RuleFor(x => x.Password).NotEmpty().WithMessage("Password is required.")
-                .MinimumLength(8).WithMessage("Password must be at least 8 characters long.");
+            RuleFor(x => x.Email).NotEmpty().WithMessage("El correo es requerido.")
+                .EmailAddress().WithMessage("Formato de correo incorrecto.");
+            RuleFor(x => x.Password).NotEmpty().WithMessage("La contraseña es requerida")
+                .MinimumLength(8).WithMessage("Contraseña debe de ser de al menos 8 caracteres");
         }
     }
 }

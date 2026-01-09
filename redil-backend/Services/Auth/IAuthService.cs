@@ -6,5 +6,7 @@ namespace redil_backend.Services.Auth
     {
         Task<T> Register(Tr authRegisterDto);
         Task<ServiceResult<AuthLoginResult>> Login(Tl authLoginDto);
+
+        Task<bool> ValidateEmail(string email);
     }
 }
