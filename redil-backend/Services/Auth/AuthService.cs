@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
-using redil_backend.Mappers.Auth;
+using redil_backend.Mappers;
 using redil_backend.Models;
 using redil_backend.Repository.Auth;
 
@@ -41,13 +41,13 @@ namespace redil_backend.Services.Auth
             var user = await _authRepository.GetUserByEmail(authLoginDto.Email);
             if( user == null)
             {
-                return ServiceResult<AuthLoginResult>.Fail("Correo invalido o no existe");
+                return ServiceResult<AuthLoginResult>.Fail("Correo invalido o no existe.");
             }
 
             var result = _passwordHasher.VerifyHashedPassword(user, user.password, authLoginDto.Password); 
             if(result == PasswordVerificationResult.Failed)
             {
-                return ServiceResult<AuthLoginResult>.Fail("Contraseña incorrecta");
+                return ServiceResult<AuthLoginResult>.Fail("Contraseña incorrecta.");
             }
 
             var userDto = user.ToUserDto();

@@ -1,5 +1,5 @@
 ﻿using redil_backend.Dtos.Redil;
-using redil_backend.Mappers.Auth;
+using redil_backend.Mappers;
 using redil_backend.Models;
 using redil_backend.Repository.Redil;
 

@@ -5,14 +5,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using redil_backend.Dtos.Auth;
 using redil_backend.Dtos.Redil;
+using redil_backend.Dtos.Teacher;
 using redil_backend.Models;
 using redil_backend.Repository.Auth;
 using redil_backend.Repository.Redil;
 using redil_backend.Services;
 using redil_backend.Services.Auth;
 using redil_backend.Services.Redil;
+using redil_backend.Services.Teacher;
 using redil_backend.Validators.Auth;
 using redil_backend.Validators.Redil;
+using redil_backend.Validators.Teacher;
 using System.Security.Claims;
 using System.Text;
 
@@ -25,10 +28,13 @@ builder.Services.AddScoped<IAuthRepository<users>, AuthRepository > ();
 builder.Services.AddScoped<IRedilRepository<rediles>, RedilRepository>();
 builder.Services.AddScoped<IRedilService<ServiceResult<RedilDto>, RegisterRedilDto>, RedilService>();
 
+builder.Services.AddScoped<ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto>, TeacherService>();
+
 // Validators
 builder.Services.AddScoped<IValidator<AuthRegisterDto>, AuthRegisterValidator>();
 builder.Services.AddScoped<IValidator<AuthLoginDto>, AuthLoginValidator>();
 builder.Services.AddScoped<IValidator<RegisterRedilDto>, RegisterRedilValidator>();
+builder.Services.AddScoped<IValidator<RegisterTeacherDto>, RegisterTeacherValidator>();
 
 // Password Hasher
 builder.Services.AddScoped<IPasswordHasher<users>, PasswordHasher<users>>();

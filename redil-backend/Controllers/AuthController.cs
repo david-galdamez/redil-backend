@@ -37,7 +37,7 @@ namespace redil_backend.Controllers
                 return BadRequest(new ApiResponse<UserDto>
                 {
                     Success = false,
-                    Message = "Errores de validación",
+                    Message = "Errores de validación.",
                     Errors = validationResult.Errors.Select(e => new ApiError
                     {
                         Field = e.PropertyName,
@@ -67,7 +67,7 @@ namespace redil_backend.Controllers
             return Ok(new ApiResponse<UserDto>
             {
                 Success = true,
-                Message = "Login exitoso",
+                Message = "Login exitoso.",
             });
         }
 
@@ -80,7 +80,7 @@ namespace redil_backend.Controllers
                 return BadRequest(new ApiResponse<UserDto>
                 {
                     Success = false,
-                    Message = "Errores de validación",
+                    Message = "Errores de validación.",
                     Errors = validationResult.Errors.Select(e => new ApiError
                     {
                         Field = e.PropertyName,
@@ -95,7 +95,7 @@ namespace redil_backend.Controllers
                 return Conflict(new ApiResponse<UserDto>
                 {
                     Success = false,
-                    Message = "El correo electrónico ya está en uso"
+                    Message = "El correo electrónico ya está en uso."
                 });
             }
 
@@ -112,7 +112,7 @@ namespace redil_backend.Controllers
             return Ok(new ApiResponse<UserDto>
             {
                     Success = true,
-                    Message = "Registro exitoso",
+                    Message = "Registro exitoso.",
             });
         }
 
@@ -124,7 +124,7 @@ namespace redil_backend.Controllers
             return Ok(new ApiResponse<UserDto>
             {
                 Success = true,
-                Message = "Cierre de sesion exitoso",
+                Message = "Cierre de sesion exitoso.",
             });
         }
     }

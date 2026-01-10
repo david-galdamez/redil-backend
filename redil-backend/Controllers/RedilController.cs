@@ -32,7 +32,7 @@ namespace redil_backend.Controllers
             return Ok(new ApiResponse<IEnumerable<RedilListDto>>
             {
                 Success = true,
-                Message = "Rediles obtenidos",
+                Message = "Rediles obtenidos.",
                 Data = rediles
             });
         }
@@ -48,7 +48,7 @@ namespace redil_backend.Controllers
                 return BadRequest(new ApiResponse<RedilDto>
                 {
                     Success = false,
-                    Message = "Error de validación",
+                    Message = "Error de validación.",
                     Errors = validationResult.Errors.Select(e => new ApiError
                     {
                         Field = e.PropertyName,
@@ -64,14 +64,14 @@ namespace redil_backend.Controllers
                 return BadRequest(new ApiResponse<RedilDto>
                 {
                     Success = false,
-                    Message = registerResult.ErrorMessage ?? "Error al registrar el redil"
+                    Message = registerResult.ErrorMessage ?? "Error al registrar el redil."
                 });
             }
 
             return Ok(new ApiResponse<RedilDto>
             {
                 Success = true,
-                Message = "Redil registrado",
+                Message = "Redil registrado.",
                 Data = registerResult.Data
             });
         }
