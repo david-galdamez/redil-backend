@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
 using System.Security.Claims;
 using System.Text;
@@ -25,11 +26,15 @@ namespace redil_backend.Services
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
             };
+
+            if(user.RedilId.HasValue && user.Role == UserRole.Maestro)
+            {
+                claims.Add(new Claim("redil_id", user.RedilId.Value.ToString()));
+            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

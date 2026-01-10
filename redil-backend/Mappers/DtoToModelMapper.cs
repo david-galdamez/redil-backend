@@ -1,5 +1,6 @@
 ﻿using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
+using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Teacher;
 using redil_backend.Models;
@@ -35,6 +36,17 @@ namespace redil_backend.Mappers
             {
                 name = registerRedilDto.Name,
                 description = registerRedilDto.Description,
+            };
+        }
+
+        public static classes ToClassModel(this RegisterClassDto registerClassDto, int RedilId, int TeacherId)
+        {
+            return new classes
+            {
+                redil_id = RedilId,
+                teacher_id = TeacherId,
+                class_date = registerClassDto.Date,
+                class_description = registerClassDto.Description,
             };
         }
     }
