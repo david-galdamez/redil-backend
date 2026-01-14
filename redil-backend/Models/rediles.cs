@@ -10,6 +10,8 @@ public partial class rediles
     public string name { get; set; } = null!;
 
     public string? description { get; set; }
+    
+    public string code { get; set; } = null!;
 
     public virtual ICollection<classes> classes { get; set; } = new List<classes>();
 

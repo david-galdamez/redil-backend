@@ -2,6 +2,7 @@
 using redil_backend.Dtos.Auth;
 using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
+using redil_backend.Dtos.Student;
 using redil_backend.Dtos.Teacher;
 using redil_backend.Models;
 
@@ -47,6 +48,17 @@ namespace redil_backend.Mappers
                 teacher_id = TeacherId,
                 class_date = registerClassDto.Date,
                 class_description = registerClassDto.Description,
+            };
+        }
+
+        public static students ToStudentModel(this RegisterStudentDto registerStudentDto)
+        {
+            return new students
+            {
+                name = registerStudentDto.Name,
+                email = registerStudentDto.Email,
+                group_id = registerStudentDto.GroupId,
+                is_server = registerStudentDto.IsServer,
             };
         }
     }

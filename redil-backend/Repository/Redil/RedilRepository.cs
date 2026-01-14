@@ -28,5 +28,16 @@ namespace redil_backend.Repository.Redil
 
         public async Task Save() =>
             await _context.SaveChangesAsync();
+
+        public async Task<bool> DoesRedilExists(string code) =>
+            await _context.rediles.AnyAsync(r => r.code.Equals(code));
+
+        public async Task<int?> GetRedilIdByCode(string code)
+        {
+            return await _context.rediles
+                .Where(r => r.code.Equals(code))
+                .Select(r => (int?)r.id)
+                .FirstOrDefaultAsync();
+        }
     }
 }

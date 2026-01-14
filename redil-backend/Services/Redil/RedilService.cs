@@ -2,6 +2,7 @@
 using redil_backend.Mappers;
 using redil_backend.Models;
 using redil_backend.Repository.Redil;
+using redil_backend.Utils;
 
 namespace redil_backend.Services.Redil
 {
@@ -22,6 +23,14 @@ namespace redil_backend.Services.Redil
         {
 
             var redil = registerRedilDto.ToRedilModel();
+            string code;
+
+            do
+            {
+                code = RedilCodeGenerator.Generate();
+            }
+            while (await _redilRepository.DoesRedilExists(code));
+            redil.code = code;
 
             await _redilRepository.Add(redil);
             await _redilRepository.Save();

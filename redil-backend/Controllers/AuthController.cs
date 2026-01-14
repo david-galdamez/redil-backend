@@ -13,7 +13,7 @@ namespace redil_backend.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto> _authService;
+        private IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto> _authService;
         private IValidator<AuthLoginDto> _loginValidator;
         private IValidator<AuthRegisterDto> _registerValidator;
 

@@ -7,7 +7,11 @@ namespace redil_backend.Repository.Redil
         Task<T?> GetRedilByName(string name);
         Task<T?> GetRedilById(int id);
 
+        Task<int?> GetRedilIdByCode(string code);
+
         Task<IEnumerable<RedilListDto>> GetAllRediles();
+
+        Task<bool> DoesRedilExists(string code);
 
         Task Add(T redil);
         Task Save();

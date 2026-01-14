@@ -87,6 +87,10 @@ public partial class RedilDBContext : DbContext
 
             entity.Property(e => e.description).HasMaxLength(255);
             entity.Property(e => e.name).HasMaxLength(100);
+
+            entity.Property(e => e.code).IsRequired().HasMaxLength(20);
+
+            entity.HasIndex(e => e.code).IsUnique();
         });
 
         modelBuilder.Entity<roles>(entity =>
