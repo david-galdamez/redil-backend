@@ -10,24 +10,24 @@ namespace redil_backend.Mappers
 {
     public static class ModelToDtoMapper
     {
-        public static UserDto ToUserDto(this users user)
+        public static UserDto ToUserDto(this User user)
         {
-            return new UserDto(user.id, user.name, user.email, (UserRole)user.role_id, user.redil_id);
+            return new UserDto(user.Id, user.Name, user.Email, (UserRole)user.RoleId, user.RedilId);
         }
 
-        public static TeacherDto ToTeacherDto(this users teacher)
+        public static TeacherDto ToTeacherDto(this User teacher)
         {
-            return new TeacherDto(teacher.name, teacher.email, teacher.redil?.name ?? "", (UserRole)teacher.role_id);
+            return new TeacherDto(teacher.Name, teacher.Email, teacher.Redil?.Name ?? "", (UserRole)teacher.RoleId);
         }
 
-        public static RedilDto ToRedilDto(this rediles redil)
+        public static RedilDto ToRedilDto(this Redile redil)
         {
-            return new RedilDto(redil.id, redil.name, redil.description);
+            return new RedilDto(redil.Id, redil.Name, redil.Description);
         }
 
-        public static ClassDto ToClassDto(this classes classes)
+        public static ClassDto ToClassDto(this Class classes)
         {
-            return new ClassDto(classes.redil_id, classes.teacher_id, classes.class_date, classes.class_description);
+            return new ClassDto(classes.RedilId, classes.TeacherId, classes.ClassDate, classes.ClassDescription);
         }
     }
 }

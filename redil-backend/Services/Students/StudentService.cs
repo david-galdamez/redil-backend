@@ -2,18 +2,21 @@
 using redil_backend.Mappers;
 using redil_backend.Models;
 using redil_backend.Repository.Redil;
-using redil_backend.Repository.Student;
+using redil_backend.Repository.Students;
 
-namespace redil_backend.Services.Student
+namespace redil_backend.Services.Students
 {
     public class StudentService : IStudentService<ServiceResult<int>, RegisterStudentDto>
     {
-        private IStudentRepository<students> _studentsRepository; 
-        private IRedilRepository<rediles> _redilRepository;
+        private IStudentRepository<Student> _studentsRepository; 
+        private IRedilRepository<Redile> _redilRepository;
 
-        public StudentService(IStudentRepository<students> studentsRepository)
+        public StudentService(
+            IStudentRepository<Student> studentsRepository,
+            IRedilRepository<Redile> redilRepository)
         {
             _studentsRepository = studentsRepository;
+            _redilRepository = redilRepository;
         }
         public async Task<ServiceResult<int>> RegisterStudent(RegisterStudentDto registerStudentDto, string code)
         {
@@ -34,7 +37,7 @@ namespace redil_backend.Services.Student
             await _studentsRepository.Add(newStudent);
             await _studentsRepository.Save();
 
-            return ServiceResult<int>.Ok(newStudent.id);
+            return ServiceResult<int>.Ok(newStudent.Id);
         }
     }
 }

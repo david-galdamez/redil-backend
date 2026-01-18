@@ -2,17 +2,17 @@
 
 namespace redil_backend.Repository.Classes
 {
-    public class ClassRepository : IClassRepository<classes>
+    public class ClassRepository : IClassRepository<Class>
     {
-        private RedilDBContext _context;
+        private RedilDbContext _context;
         
-        public ClassRepository(RedilDBContext context)
+        public ClassRepository(RedilDbContext context)
         {
             _context = context;
         }
 
-        public async Task Add(classes classes) =>
-            await _context.classes.AddAsync(classes);
+        public async Task Add(Class classes) =>
+            await _context.Classes.AddAsync(classes);
 
         public async Task Save() =>
             await _context.SaveChangesAsync();

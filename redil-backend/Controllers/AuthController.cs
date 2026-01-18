@@ -28,6 +28,7 @@ namespace redil_backend.Controllers
             _registerValidator = registerValidator;
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<ApiResponse<UserDto>>> Login([FromBody]AuthLoginDto authLoginDto)
         {

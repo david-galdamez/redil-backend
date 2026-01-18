@@ -1,4 +1,4 @@
-﻿namespace redil_backend.Repository.Student
+﻿namespace redil_backend.Repository.Students
 {
     public interface IStudentRepository<T>
     {

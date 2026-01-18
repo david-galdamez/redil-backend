@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using redil_backend.Dtos.Responses;
 using redil_backend.Dtos.Student;
 using redil_backend.Services;
-using redil_backend.Services.Student;
+using redil_backend.Services.Students;
 
 namespace redil_backend.Controllers
 {

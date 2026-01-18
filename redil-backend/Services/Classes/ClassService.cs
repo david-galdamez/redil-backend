@@ -7,9 +7,9 @@ namespace redil_backend.Services.Classes
 {
     public class ClassService : IClassService<ServiceResult<ClassDto>, RegisterClassDto>
     {
-        private IClassRepository<classes> _classRepository;
+        private IClassRepository<Class> _classRepository;
 
-        public ClassService(IClassRepository<classes> classRepository)
+        public ClassService(IClassRepository<Class> classRepository)
         {
             _classRepository = classRepository;
         }

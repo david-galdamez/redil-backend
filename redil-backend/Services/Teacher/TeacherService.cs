@@ -10,10 +10,10 @@ namespace redil_backend.Services.Teacher
     public class TeacherService : ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto>
     {
 
-        private IAuthRepository<users> _authRepository;
-        private IPasswordHasher<users> _passwordHasher;
+        private IAuthRepository<User> _authRepository;
+        private IPasswordHasher<User> _passwordHasher;
 
-        public TeacherService(IAuthRepository<users> autoRepository, IPasswordHasher<users> passwordHasher)
+        public TeacherService(IAuthRepository<User> autoRepository, IPasswordHasher<User> passwordHasher)
         {
             _authRepository = autoRepository;
             _passwordHasher = passwordHasher;
@@ -25,7 +25,7 @@ namespace redil_backend.Services.Teacher
 
             var hashedPassword = _passwordHasher.HashPassword(teacher, registerTeacherDto.Password);
 
-            teacher.password = hashedPassword;
+            teacher.Password = hashedPassword;
 
             await _authRepository.Add(teacher);
             await _authRepository.Save();

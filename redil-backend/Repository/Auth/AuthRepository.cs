@@ -3,21 +3,21 @@ using redil_backend.Models;
 
 namespace redil_backend.Repository.Auth
 {
-    public class AuthRepository : IAuthRepository<users>
+    public class AuthRepository : IAuthRepository<User>
     {
-        private RedilDBContext _context;
+        private RedilDbContext _context;
 
-        public AuthRepository(RedilDBContext context)
+        public AuthRepository(RedilDbContext context)
         {
             _context = context;
         }
 
-        public async Task Add(users entity) =>
-            await _context.users.AddAsync(entity);
+        public async Task Add(User entity) =>
+            await _context.Users.AddAsync(entity);
 
-        public async Task<users?> GetUserByEmail(string email)
+        public async Task<User?> GetUserByEmail(string email)
         {
-            return await _context.users.FirstOrDefaultAsync(u => u.email.Equals(email));
+            return await _context.Users.FirstOrDefaultAsync(u => u.Email.Equals(email));
         }
 
         public async Task Save() =>

@@ -4,39 +4,39 @@ using redil_backend.Models;
 
 namespace redil_backend.Repository.Redil
 {
-    public class RedilRepository : IRedilRepository<rediles>
+    public class RedilRepository : IRedilRepository<Redile>
     {
 
-        RedilDBContext _context;
+        RedilDbContext _context;
 
-        public RedilRepository(RedilDBContext context)
+        public RedilRepository(RedilDbContext context)
         {
             _context = context;
         }
 
         public async Task<IEnumerable<RedilListDto>> GetAllRediles() =>
-            await _context.rediles.AsNoTracking().Select(r => new RedilListDto(r.id, r.name)).ToListAsync();
+            await _context.Rediles.AsNoTracking().Select(r => new RedilListDto(r.Id, r.Name)).ToListAsync();
 
-        public async Task Add(rediles redil) =>
-            await _context.rediles.AddAsync(redil);
+        public async Task Add(Redile redil) =>
+            await _context.Rediles.AddAsync(redil);
 
-        public async Task<rediles?> GetRedilById(int id) =>
-            await _context.rediles.FindAsync(id);
+        public async Task<Redile?> GetRedilById(int id) =>
+            await _context.Rediles.FindAsync(id);
 
-        public async Task<rediles?> GetRedilByName(string name) =>
-            await _context.rediles.FirstOrDefaultAsync(r => r.name.Equals(name));
+        public async Task<Redile?> GetRedilByName(string name) =>
+            await _context.Rediles.FirstOrDefaultAsync(r => r.Name.Equals(name));
 
         public async Task Save() =>
             await _context.SaveChangesAsync();
 
         public async Task<bool> DoesRedilExists(string code) =>
-            await _context.rediles.AnyAsync(r => r.code.Equals(code));
+            await _context.Rediles.AnyAsync(r => r.Code.Equals(code));
 
         public async Task<int?> GetRedilIdByCode(string code)
         {
-            return await _context.rediles
-                .Where(r => r.code.Equals(code))
-                .Select(r => (int?)r.id)
+            return await _context.Rediles
+                .Where(r => r.Code.Equals(code))
+                .Select(r => (int?)r.Id)
                 .FirstOrDefaultAsync();
         }
     }

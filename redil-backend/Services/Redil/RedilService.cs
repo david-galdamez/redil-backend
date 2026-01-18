@@ -8,8 +8,8 @@ namespace redil_backend.Services.Redil
 {
     public class RedilService : IRedilService<ServiceResult<RedilDto>, RegisterRedilDto>
     {
-        private IRedilRepository<rediles> _redilRepository;
-        public RedilService(IRedilRepository<rediles> redilRepository)
+        private IRedilRepository<Redile> _redilRepository;
+        public RedilService(IRedilRepository<Redile> redilRepository)
         {
             _redilRepository = redilRepository;
         }
@@ -30,7 +30,7 @@ namespace redil_backend.Services.Redil
                 code = RedilCodeGenerator.Generate();
             }
             while (await _redilRepository.DoesRedilExists(code));
-            redil.code = code;
+            redil.Code = code;
 
             await _redilRepository.Add(redil);
             await _redilRepository.Save();

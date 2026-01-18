@@ -9,11 +9,11 @@ namespace redil_backend.Services.Auth
 {
     public class AuthService : IAuthService<ServiceResult<UserDto>,AuthRegisterDto, AuthLoginDto>
     {
-        private IAuthRepository<users> _authRepository;
-        private IPasswordHasher<users> _passwordHasher;
+        private IAuthRepository<User> _authRepository;
+        private IPasswordHasher<User> _passwordHasher;
         private TokenProvider _tokenProvider;
 
-        public AuthService(IAuthRepository<users> authRepository, IPasswordHasher<users> passwordHasher, TokenProvider tokenProvider)
+        public AuthService(IAuthRepository<User> authRepository, IPasswordHasher<User> passwordHasher, TokenProvider tokenProvider)
         {
             _authRepository = authRepository;
             _passwordHasher = passwordHasher;
@@ -26,7 +26,7 @@ namespace redil_backend.Services.Auth
 
             var hashedPassword = _passwordHasher.HashPassword(user, authRegisterDto.Password);
 
-            user.password = hashedPassword;
+            user.Password = hashedPassword;
 
             await _authRepository.Add(user);
             await _authRepository.Save();
@@ -44,7 +44,7 @@ namespace redil_backend.Services.Auth
                 return ServiceResult<AuthLoginResult>.Fail("Correo invalido o no existe.");
             }
 
-            var result = _passwordHasher.VerifyHashedPassword(user, user.password, authLoginDto.Password); 
+            var result = _passwordHasher.VerifyHashedPassword(user, user.Password, authLoginDto.Password); 
             if(result == PasswordVerificationResult.Failed)
             {
                 return ServiceResult<AuthLoginResult>.Fail("Contraseña incorrecta.");

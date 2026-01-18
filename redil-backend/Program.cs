@@ -12,12 +12,12 @@ using redil_backend.Models;
 using redil_backend.Repository.Auth;
 using redil_backend.Repository.Classes;
 using redil_backend.Repository.Redil;
-using redil_backend.Repository.Student;
+using redil_backend.Repository.Students;
 using redil_backend.Services;
 using redil_backend.Services.Auth;
 using redil_backend.Services.Classes;
 using redil_backend.Services.Redil;
-using redil_backend.Services.Student;
+using redil_backend.Services.Students;
 using redil_backend.Services.Teacher;
 using redil_backend.Validators.Auth;
 using redil_backend.Validators.Classes;
@@ -32,12 +32,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Auth
 builder.Services.AddScoped<IAuthService<ServiceResult<UserDto>,AuthRegisterDto, AuthLoginDto>, AuthService>();
-builder.Services.AddScoped<IAuthRepository<users>, AuthRepository > ();
+builder.Services.AddScoped<IAuthRepository<User>, AuthRepository > ();
 builder.Services.AddScoped<IValidator<AuthRegisterDto>, AuthRegisterValidator>();
 builder.Services.AddScoped<IValidator<AuthLoginDto>, AuthLoginValidator>();
 
 // Redil
-builder.Services.AddScoped<IRedilRepository<rediles>, RedilRepository>();
+builder.Services.AddScoped<IRedilRepository<Redile>, RedilRepository>();
 builder.Services.AddScoped<IRedilService<ServiceResult<RedilDto>, RegisterRedilDto>, RedilService>();
 builder.Services.AddScoped<IValidator<RegisterRedilDto>, RegisterRedilValidator>();
 
@@ -46,23 +46,23 @@ builder.Services.AddScoped<ITeacherService<ServiceResult<TeacherDto>, RegisterTe
 builder.Services.AddScoped<IValidator<RegisterTeacherDto>, RegisterTeacherValidator>();
 
 // Classes
-builder.Services.AddScoped<IClassRepository<classes>, ClassRepository>();
+builder.Services.AddScoped<IClassRepository<Class>, ClassRepository>();
 builder.Services.AddScoped<IClassService<ServiceResult<ClassDto>, RegisterClassDto>, ClassService>();
 builder.Services.AddScoped<IValidator<RegisterClassDto>, RegisterClassValidator>();
 
 // Students
 builder.Services.AddScoped<IStudentService<ServiceResult<int>, RegisterStudentDto>, StudentService>();
-builder.Services.AddScoped<IStudentRepository<students>, StudentRepository>();
+builder.Services.AddScoped<IStudentRepository<Student>, StudentRepository>();
 builder.Services.AddScoped<IValidator<RegisterStudentDto>, RegisterStudentValidator>();
 
 // Password Hasher
-builder.Services.AddScoped<IPasswordHasher<users>, PasswordHasher<users>>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // Jwt
 builder.Services.AddSingleton<TokenProvider>();
 
 // Entity Framework
-builder.Services.AddDbContext<RedilDBContext>(options =>
+builder.Services.AddDbContext<RedilDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"));
 });
