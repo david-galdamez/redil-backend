@@ -40,8 +40,21 @@ namespace redil_backend.Controllers
             }
 
             var registerResult = await _studentService.RegisterStudent(registerStudentDto, code);
+            if(!registerResult.Success || registerResult.Data == 0)
+            {
+                return BadRequest(new ApiResponse<int>
+                {
+                    Success = false,
+                    Message = registerResult.ErrorMessage
+                });
+            }
 
-            return Ok();
+            return Ok(new ApiResponse<int>
+            {
+                Success = true,
+                Message = "Estudiante registrado exitosamente.",
+                Data = registerResult.Data
+            });
         }
     }
 }

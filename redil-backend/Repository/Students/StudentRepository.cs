@@ -16,8 +16,17 @@ namespace redil_backend.Repository.Students
         public async Task Add(Student student) =>
             await _context.Students.AddAsync(student);
 
+        public async Task<Student?> GetStudentByEmail(string email) =>
+            await _context.Students.Where(s => s.Email.Equals(email)).FirstOrDefaultAsync();
+
         public async Task Save() =>
             await _context.SaveChangesAsync();
+
+        public async Task Update(Student student)
+        {
+            _context.Students.Attach(student);
+            _context.Entry(student).State = EntityState.Modified;
+        }
 
         public async Task<bool> ValidateStudent(string email) =>
             await _context.Students.AnyAsync(s => s.Email.Equals(email));
