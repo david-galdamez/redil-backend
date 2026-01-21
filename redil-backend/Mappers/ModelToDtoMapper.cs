@@ -17,7 +17,7 @@ namespace redil_backend.Mappers
 
         public static TeacherDto ToTeacherDto(this User teacher)
         {
-            return new TeacherDto(teacher.Name, teacher.Email, teacher.Redil?.Name ?? "", (UserRole)teacher.RoleId);
+            return new TeacherDto(teacher.Name, teacher.Email, teacher.Redil?.Id ?? 0);
         }
 
         public static RedilDto ToRedilDto(this Redile redil)

@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using redil_backend.Domain.Enums;
+using redil_backend.Dtos.Teacher;
 using redil_backend.Models;
 
 namespace redil_backend.Repository.Auth
@@ -15,6 +17,15 @@ namespace redil_backend.Repository.Auth
         public async Task Add(User entity) =>
             await _context.Users.AddAsync(entity);
 
+        public async Task<IEnumerable<TeacherListDto>> GetAllTeachers()
+        {
+            return await _context.Users.Where(t => t.RoleId == (int)UserRole.Maestro)
+                .Select(t => new TeacherListDto(t.Id, t.Name, t.Redil == null ? "Sin Redil Asignado" : t.Redil.Name)).ToListAsync();
+        }
+
+        public async Task<User> GetTeacher(int teacherId) =>
+            await _context.Users.Include(u => u.Redil).FirstAsync(u => u.Id == teacherId && u.RoleId == (int)UserRole.Maestro);
+
         public async Task<User?> GetUserByEmail(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email.Equals(email));
@@ -22,5 +33,11 @@ namespace redil_backend.Repository.Auth
 
         public async Task Save() =>
             await _context.SaveChangesAsync();
+
+        public async Task<bool> TeacherExists(string email) =>
+            await _context.Users.AnyAsync(u => u.Email.Equals(email) && u.RoleId == (int)UserRole.Maestro);
+
+        public async Task<bool> TeacherExists(int teacherId) =>
+            await _context.Users.AnyAsync(u => u.Id == teacherId && u.RoleId == (int)UserRole.Maestro);
     }
 }

@@ -19,6 +19,21 @@ namespace redil_backend.Services.Teacher
             _passwordHasher = passwordHasher;
         }
 
+        public async Task<ServiceResult<TeacherDto>> GetTeacher(int id)
+        {
+            var teacher = await _authRepository.GetTeacher(id);
+            var teacherDto = teacher.ToTeacherDto();
+
+            return ServiceResult<TeacherDto>.Ok(teacherDto);
+        }
+
+        public async Task<ServiceResult<IEnumerable<TeacherListDto>>> GetTeachers()
+        {
+            var teachers = await _authRepository.GetAllTeachers();
+
+            return ServiceResult<IEnumerable<TeacherListDto>>.Ok(teachers);
+        }
+
         public async Task<ServiceResult<TeacherDto>> RegisterTeacher(RegisterTeacherDto registerTeacherDto)
         {
             var teacher = registerTeacherDto.ToTeacherModel(UserRole.Maestro);
@@ -33,11 +48,14 @@ namespace redil_backend.Services.Teacher
             return ServiceResult<TeacherDto>.Ok(teacher.ToTeacherDto());
         }
 
-        public async Task<bool> ValidateTeacher(string email)
+        public async Task<bool> TeacherExists(string email)
         {
-            var teacher = await _authRepository.GetUserByEmail(email);
+            return await _authRepository.TeacherExists(email);
+        }
 
-            return teacher == null;
-        } 
+        public async Task<bool> TeacherExists(int id)
+        {
+            return await _authRepository.TeacherExists(id);
+        }
     }
 }

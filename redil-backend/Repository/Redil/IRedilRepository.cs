@@ -12,6 +12,7 @@ namespace redil_backend.Repository.Redil
         Task<IEnumerable<RedilListDto>> GetAllRediles();
 
         Task<bool> DoesRedilExists(string code);
+        Task<bool> DoesRedilExists(int id);
 
         Task Add(T redil);
         Task Save();

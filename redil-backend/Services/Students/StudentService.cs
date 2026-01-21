@@ -26,6 +26,20 @@ namespace redil_backend.Services.Students
             _groupRepository = groupRepository;
             _redilRepository = redilRepository;
         }
+
+        public async Task<ServiceResult<IEnumerable<StudentListDto>>> GetStudentByRedil(int id)
+        {
+            var redilExists = await _redilRepository.DoesRedilExists(id);
+            if(!redilExists)
+            {
+                return ServiceResult<IEnumerable<StudentListDto>>.Fail("El redil no existe.");
+            }
+
+            var students = await _studentsRepository.GetStudentsByRedilId(id);
+
+            return ServiceResult<IEnumerable<StudentListDto>>.Ok(students);
+        }
+
         public async Task<ServiceResult<int>> RegisterStudent(RegisterStudentDto registerStudentDto, string code)
         {
             var redilId = await _redilRepository.GetRedilIdByCode(code);

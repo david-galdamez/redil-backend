@@ -8,6 +8,7 @@ using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Student;
 using redil_backend.Dtos.Teacher;
+using redil_backend.Middlewares;
 using redil_backend.Models;
 using redil_backend.Repository.Auth;
 using redil_backend.Repository.Classes;
@@ -110,6 +111,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         });
 
 var app = builder.Build();
+
+app.UseMiddleware<ErrorHandlerMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -39,5 +39,8 @@ namespace redil_backend.Repository.Redil
                 .Select(r => (int?)r.Id)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<bool> DoesRedilExists(int id) =>
+            await _context.Rediles.AnyAsync(r => r.Id == id);
     }
 }

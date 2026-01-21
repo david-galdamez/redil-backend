@@ -1,4 +1,5 @@
-﻿using redil_backend.Models;
+﻿using redil_backend.Dtos.Student;
+using redil_backend.Models;
 
 namespace redil_backend.Repository.Students
 {
@@ -7,6 +8,7 @@ namespace redil_backend.Repository.Students
         Task<bool> ValidateStudent(string email);
 
         Task<Student?> GetStudentByEmail(string email);
+        Task<IEnumerable<StudentListDto>> GetStudentsByRedilId(int redilId);
         Task Add(T student);
         Task Update(T student);
         Task Save();

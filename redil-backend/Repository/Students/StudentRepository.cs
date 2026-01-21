@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using redil_backend.Dtos.Student;
 using redil_backend.Models;
 using redil_backend.Repository.Students;
 
@@ -18,6 +19,13 @@ namespace redil_backend.Repository.Students
 
         public async Task<Student?> GetStudentByEmail(string email) =>
             await _context.Students.Where(s => s.Email.Equals(email)).FirstOrDefaultAsync();
+
+        public async Task<IEnumerable<StudentListDto>> GetStudentsByRedilId(int redilId)
+        {
+            return await _context.Students
+                .Where(s => s.StudentRedils.Any(sr => sr.RedilId == redilId))
+                .Select(s => new StudentListDto(s.Id, s.Name, s.Group.Name, s.IsServer)).ToListAsync();
+        }
 
         public async Task Save() =>
             await _context.SaveChangesAsync();

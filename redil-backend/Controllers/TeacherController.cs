@@ -26,6 +26,51 @@ namespace redil_backend.Controllers
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpGet]
+        public async Task<ActionResult<ApiResponse<IEnumerable<TeacherListDto>>>> GetTeachers()
+        {
+            var teachers = await _teacherService.GetTeachers();
+
+            return Ok(new ApiResponse<IEnumerable<TeacherListDto>>
+            {
+                Success = true,
+                Data = teachers.Data
+            });
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ApiResponse<TeacherDto>>> GetTeacherInfo([FromRoute]int id)
+        {
+            if(id == 0)
+            {
+                return BadRequest(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = "Id del maestro no proporcionado"
+                });
+            }
+
+            var teacherExists = await _teacherService.TeacherExists(id);
+            if(!teacherExists)
+            {
+                return NotFound(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = "Maestro no existe"
+                });
+            }
+
+            var teacherResult = await _teacherService.GetTeacher(id);
+
+            return Ok(new ApiResponse<TeacherDto>
+            {
+                Success = true,
+                Data = teacherResult.Data
+            });
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpPost("register")]
         public async Task<ActionResult<ApiResponse<TeacherDto>>> RegisterTeacher([FromBody]RegisterTeacherDto registerTeacherDto)
         {
@@ -44,13 +89,13 @@ namespace redil_backend.Controllers
                 });
             }
 
-            var validTeacher = await _teacherService.ValidateTeacher(registerTeacherDto.Email);
-            if(!validTeacher)
+            var teacherExists = await _teacherService.TeacherExists(registerTeacherDto.Email);
+            if(teacherExists)
             {
                 return Conflict(new ApiResponse<TeacherDto>
                 {
                     Success = false,
-                    Message = "Correo ya registrado"
+                    Message = "Correo electronico ya registrado."
                 });
             }
 

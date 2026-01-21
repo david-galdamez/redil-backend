@@ -1,6 +1,8 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using redil_backend.Dtos.Responses;
 using redil_backend.Dtos.Student;
 using redil_backend.Services;
@@ -22,9 +24,49 @@ namespace redil_backend.Controllers
             _studentService = studentService;
         }
 
+        [Authorize]
+        [HttpGet("redil/{id}")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<StudentListDto>>>> GetStudentsByRedil([FromRoute]int id)
+        {
+            if(id == 0)
+            {
+                return BadRequest(new ApiResponse<IEnumerable<StudentListDto>>
+                {
+                    Success = false,
+                    Message = "Id no proporcionado."
+                });
+            }
+
+            var studentResult = await _studentService.GetStudentByRedil(id);
+            if(!studentResult.Success || studentResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<IEnumerable<StudentListDto>>
+                {
+                    Success = false,
+                    Message = studentResult.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<IEnumerable<StudentListDto>>
+            {
+                Success = true,
+                Data = studentResult.Data
+            });
+        }
+
         [HttpPost("register/{code}")]
         public async Task<ActionResult<ApiResponse<int>>> RegisterStudent([FromRoute]string code, [FromBody]RegisterStudentDto registerStudentDto)
         {
+
+            if(code.IsNullOrEmpty())
+            {
+                return BadRequest(new ApiResponse<int>
+                {
+                    Success = false,
+                    Message = "Codigo no proporcionado."
+                });
+            }
+
             var validationResult = await _registerStudentValidator.ValidateAsync(registerStudentDto);
             if(!validationResult.IsValid)
             {
