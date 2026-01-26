@@ -17,12 +17,17 @@ namespace redil_backend.Controllers
     {
 
         private IValidator<RegisterTeacherDto> _registerTeacherValidator;
-        private ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto> _teacherService;
+        private ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto, UpdateTeacherDto> _teacherService;
+        private IValidator<UpdateTeacherDto> _updateTeacherValidator;
 
-        public TeacherController(IValidator<RegisterTeacherDto> registerTeacherValidator, ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto> teacherService)
+        public TeacherController(
+            IValidator<RegisterTeacherDto> registerTeacherValidator, 
+            ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto, UpdateTeacherDto> teacherService,
+            IValidator<UpdateTeacherDto> updateTeacherValidator)
         {
             _registerTeacherValidator = registerTeacherValidator;
             _teacherService = teacherService;
+            _updateTeacherValidator = updateTeacherValidator;
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
@@ -67,6 +72,61 @@ namespace redil_backend.Controllers
             {
                 Success = true,
                 Data = teacherResult.Data
+            });
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ApiResponse<TeacherDto>>> UpdateTeacher([FromRoute] int id, [FromBody] UpdateTeacherDto updateTeacherDto)
+        {
+            if (id == 0)
+            {
+                return BadRequest(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = "Id del maestro no proporcionado"
+                });
+            }
+
+            var teacherExists = await _teacherService.TeacherExists(id);
+            if (!teacherExists)
+            {
+                return NotFound(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = "Maestro no existe"
+                });
+            }
+
+            var validationResult = await _updateTeacherValidator.ValidateAsync(updateTeacherDto);
+            if(!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = "Error de validación",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            var updateResult = await _teacherService.UpdateTeacher(updateTeacherDto, id);
+            if(!updateResult.Success || updateResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = updateResult.ErrorMessage ?? "Error al actualizar el maestro."
+                });
+            }
+
+            return Ok(new ApiResponse<TeacherDto>
+            {
+                Success = true,
+                Data = updateResult.Data
             });
         }
 

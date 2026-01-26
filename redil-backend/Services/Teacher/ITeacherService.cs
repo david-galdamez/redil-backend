@@ -2,9 +2,10 @@
 
 namespace redil_backend.Services.Teacher
 {
-    public interface ITeacherService<T, Tr>
+    public interface ITeacherService<T, Tr, Tu>
     {
         Task<T> RegisterTeacher(Tr registerTeacherDto);
+        Task<T> UpdateTeacher(Tu updateTeacherDto, int id);
         Task<T> GetTeacher(int id);
         Task<bool> TeacherExists(string email);
         Task<bool> TeacherExists(int id);

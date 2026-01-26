@@ -7,7 +7,7 @@ using redil_backend.Repository.Auth;
 
 namespace redil_backend.Services.Teacher
 {
-    public class TeacherService : ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto>
+    public class TeacherService : ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto, UpdateTeacherDto>
     {
 
         private IAuthRepository<User> _authRepository;
@@ -56,6 +56,27 @@ namespace redil_backend.Services.Teacher
         public async Task<bool> TeacherExists(int id)
         {
             return await _authRepository.TeacherExists(id);
+        }
+
+        public async Task<ServiceResult<TeacherDto>> UpdateTeacher(UpdateTeacherDto updateTeacherDto, int id)
+        {
+            var teacher = await _authRepository.GetTeacher(id);
+            if(teacher == null)
+            {
+                return ServiceResult<TeacherDto>.Fail("Maestro no existe.");
+            }
+
+            teacher.Name = updateTeacherDto.Name;
+            teacher.Email = updateTeacherDto.Email;
+            teacher.RedilId = updateTeacherDto.RedilId;
+            teacher.IsActive = updateTeacherDto.IsActive;
+
+            await _authRepository.Update(teacher);
+            await _authRepository.Save();
+
+            var teacherDto = teacher.ToTeacherDto();
+
+            return ServiceResult<TeacherDto>.Ok(teacherDto);
         }
     }
 }

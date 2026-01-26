@@ -24,6 +24,36 @@ namespace redil_backend.Controllers
         }
 
         [Authorize(Roles = nameof(UserRole.Maestro))]
+        [HttpGet]
+        public async Task<ActionResult<ApiResponse<ICollection<ClassListDto>>>> GetClasses([FromQuery]int page)
+        {
+            var teacherId = User.GetUserId();
+
+            var classesResult = await _classService.GetClasses(teacherId, page);
+            if(!classesResult.Success || classesResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<ICollection<ClassListDto>>
+                {
+                    Success = false,
+                    Message = classesResult.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<ICollection<ClassListDto>>
+            {
+                Success = true,
+                Data = classesResult.Data
+            });
+        }
+
+        [Authorize(Roles = nameof(UserRole.Maestro))]
+        [HttpPut("assist")]
+        public async Task<ActionResult<ApiResponse<>>> PassAssist()
+        {
+            return Ok();
+        }
+
+        [Authorize(Roles = nameof(UserRole.Maestro))]
         [HttpPost("register")]
         public async Task<ActionResult<ApiResponse<ClassDto>>> RegisterClass([FromBody]RegisterClassDto registerClassDto)
         {

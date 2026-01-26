@@ -39,5 +39,11 @@ namespace redil_backend.Repository.Auth
 
         public async Task<bool> TeacherExists(int teacherId) =>
             await _context.Users.AnyAsync(u => u.Id == teacherId && u.RoleId == (int)UserRole.Maestro);
+
+        public async Task Update(User entity)
+        {
+            _context.Users.Attach(entity);
+            _context.Entry(entity).State = EntityState.Modified;
+        }
     }
 }

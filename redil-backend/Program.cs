@@ -45,7 +45,7 @@ builder.Services.AddScoped<IRedilService<ServiceResult<RedilDto>, RegisterRedilD
 builder.Services.AddScoped<IValidator<RegisterRedilDto>, RegisterRedilValidator>();
 
 // Teacher
-builder.Services.AddScoped<ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto>, TeacherService>();
+builder.Services.AddScoped<ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto, UpdateTeacherDto>, TeacherService>();
 builder.Services.AddScoped<IValidator<RegisterTeacherDto>, RegisterTeacherValidator>();
 
 // Classes

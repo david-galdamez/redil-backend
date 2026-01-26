@@ -11,6 +11,7 @@ namespace redil_backend.Repository.Auth
         Task<bool> TeacherExists(string email);
         Task<bool> TeacherExists(int teacherId);
         Task Add(TEntity entity);
+        Task Update(TEntity entity);
         Task Save();
     }
 }

@@ -42,7 +42,6 @@ namespace redil_backend.Controllers
         public async Task<ActionResult<ApiResponse<RedilDto>>> RegisterRedil([FromBody]RegisterRedilDto registerRedilDto)
         {
             var validationResult = await _registerRedilValidator.ValidateAsync(registerRedilDto);
-
             if(!validationResult.IsValid)
             {
                 return BadRequest(new ApiResponse<RedilDto>

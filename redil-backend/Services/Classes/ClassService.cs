@@ -14,6 +14,13 @@ namespace redil_backend.Services.Classes
             _classRepository = classRepository;
         }
 
+        public async Task<ServiceResult<ICollection<ClassListDto>>> GetClasses(int teacherId, int page)
+        {
+            var classes = await _classRepository.GetClasses(teacherId, page);
+
+            return ServiceResult<ICollection<ClassListDto>>.Ok(classes);
+        }
+
         public async Task<ServiceResult<ClassDto>> RegisterClass(RegisterClassDto registerClassDto, int redilId, int teacherId)
         {
             var classModel = registerClassDto.ToClassModel(redilId, teacherId);
