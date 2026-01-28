@@ -1,17 +1,54 @@
-﻿using redil_backend.Dtos.Classes;
+﻿using Microsoft.EntityFrameworkCore;
+using redil_backend.Dtos.Classes;
 using redil_backend.Mappers;
 using redil_backend.Models;
+using redil_backend.Repository.ClassDetails;
 using redil_backend.Repository.Classes;
+using redil_backend.Repository.StudentRediles;
+using redil_backend.Repository.Students;
+using redil_backend.Utils;
 
 namespace redil_backend.Services.Classes
 {
     public class ClassService : IClassService<ServiceResult<ClassDto>, RegisterClassDto>
     {
         private IClassRepository<Class> _classRepository;
+        private IStudentRedilRepository<StudentRedil> _studentRedilRepository;
+        private IClassDetailsRepository<ClassDetail> _classDetailsRepository;
+        private IStudentRepository<Student> _studentRepository;
 
-        public ClassService(IClassRepository<Class> classRepository)
+        public ClassService(
+            IClassRepository<Class> classRepository,
+            IStudentRedilRepository<StudentRedil> studentRedilRepository,
+            IClassDetailsRepository<ClassDetail> classDetailsRepository,
+            IStudentRepository<Student> studentRepository)
         {
+            _studentRedilRepository = studentRedilRepository;
             _classRepository = classRepository;
+            _classDetailsRepository = classDetailsRepository;
+            _studentRepository = studentRepository;
+        }
+
+        public async Task<bool> ClassExists(int classId)
+        {
+            return await _classRepository.Exists(classId);
+        }
+
+        public async Task<bool> ClassExists(string attendanceToken)
+        {
+            return await _classRepository.Exists(attendanceToken);
+        }
+
+        public async Task<ServiceResult<ClassDetailsDto>> GetClassDetail(int classId)
+        {
+            var classDetail = await _classRepository.GetById(classId);
+
+            if(classDetail == null)
+            {
+                return ServiceResult<ClassDetailsDto>.Fail("Clase no encontrada.");
+            }
+
+            return ServiceResult<ClassDetailsDto>.Ok(classDetail.ToClassDetailsDto());
         }
 
         public async Task<ServiceResult<ICollection<ClassListDto>>> GetClasses(int teacherId, int page)
@@ -21,6 +58,76 @@ namespace redil_backend.Services.Classes
             return ServiceResult<ICollection<ClassListDto>>.Ok(classes);
         }
 
+        public async Task<ServiceResult<string>> PassAssist(int classId)
+        {
+            var classModel = await _classRepository.GetById(classId);
+            if(classModel == null)
+            {
+                return ServiceResult<string>.Fail("Clase no encontrada.");
+            }
+
+            // Si se intenta generar otro token, se reutiliza el token existente si no ha expirado
+            if(classModel.AttendanceToken != null && classModel.ExpiresAt > DateTime.UtcNow)
+            {
+                return ServiceResult<string>.Ok(classModel.AttendanceToken);
+            }
+
+            bool saved = false;
+            while(!saved)
+            {
+                classModel.AttendanceToken = AttendanceTokenGenerator.Generate();
+                classModel.ExpiresAt = DateTime.UtcNow.AddHours(1);
+
+                try
+                {
+                    await _classRepository.Update(classModel);
+                    await _classRepository.Save();
+                    saved = true;
+                }
+                catch (DbUpdateException)
+                {
+                    // Si hay una colisión de token, generamos uno nuevo y lo intentamos de nuevo
+                    continue;
+                }
+            }
+
+            return ServiceResult<string>.Ok(classModel.AttendanceToken!);
+        }
+
+        public async Task<ServiceResult<ClassDto>> RegisterAssist(string attendanceToken, RegisterAttendanceDto registerAttendanceDto)
+        {
+            var validAssist = await ValidateAssistToken(attendanceToken);
+            if(!validAssist)
+            {
+                return ServiceResult<ClassDto>.Fail("Token de asistencia inválido o expirado.");
+            }
+
+            var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
+            var studentModel = await _studentRepository.GetStudentByEmail(registerAttendanceDto.Email);
+            if(studentModel == null || classModel == null)
+            {
+                return ServiceResult<ClassDto>.Fail("Clase o estudiante no encontrado.");
+            }
+
+            var classDetail = await _classDetailsRepository.GetClassDetail(classModel.Id, studentModel.Id);
+            if(classDetail == null)
+            {
+                return ServiceResult<ClassDto>.Fail("El estudiante no está inscrito en esta clase.");
+            }
+
+            if (classDetail.Attendance)
+            {
+                return ServiceResult<ClassDto>.Fail("Asistencia ya registrada para este estudiante.");
+            }
+
+            classDetail.Attendance = true;
+
+            await _classDetailsRepository.Update(classDetail);
+            await _classDetailsRepository.Save();
+
+            return ServiceResult<ClassDto>.Ok(classModel.ToClassDto());
+        }
+
         public async Task<ServiceResult<ClassDto>> RegisterClass(RegisterClassDto registerClassDto, int redilId, int teacherId)
         {
             var classModel = registerClassDto.ToClassModel(redilId, teacherId);
@@ -28,9 +135,32 @@ namespace redil_backend.Services.Classes
             await _classRepository.Add(classModel);
             await _classRepository.Save();
 
-            var classDto = classModel.ToClassDto();
+            var students = await _studentRedilRepository.GetStudents(redilId);
+            foreach(var student in students)
+            {
+                await _classDetailsRepository.Add(new ClassDetail
+                {
+                    ClassId = classModel.Id,
+                    StudentId = student.Id,
+                    Attendance = false
+                });
+            }
 
+            await _classDetailsRepository.Save();
+
+            var classDto = classModel.ToClassDto();
             return ServiceResult<ClassDto>.Ok(classDto);
+        }
+
+        public async Task<bool> ValidateAssistToken(string attendanceToken)
+        {
+            var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
+            if(classModel == null)
+            {
+                return false;
+            }
+
+            return classModel.AttendanceToken != null && classModel.ExpiresAt > DateTime.UtcNow;
         }
     }
 }

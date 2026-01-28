@@ -18,6 +18,10 @@ namespace redil_backend.Repository.StudentRediles
         public async Task<StudentRedil?> GetActiveRelation(int studentId) =>
             await _context.StudentRediles.FirstOrDefaultAsync(sr => sr.StudentId == studentId && sr.Active);
 
+        public async Task<ICollection<StudentRedil>> GetStudents(int redilId) =>
+            await _context.StudentRediles.Where(sr => sr.RedilId == redilId && sr.Active)
+                .ToListAsync();
+
         public async Task Save() =>
             await _context.SaveChangesAsync();
 

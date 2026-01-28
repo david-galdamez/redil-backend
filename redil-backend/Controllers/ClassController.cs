@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Responses;
@@ -10,20 +11,25 @@ using redil_backend.Services.Classes;
 
 namespace redil_backend.Controllers
 {
+    [Authorize(Roles = nameof(UserRole.Maestro))]
     [Route("api/[controller]")]
     [ApiController]
     public class ClassController : ControllerBase
     {
         private IValidator<RegisterClassDto> _registerClassValidator;
+        private IValidator<RegisterAttendanceDto> _registerAttendanceValidator;
         private IClassService<ServiceResult<ClassDto>, RegisterClassDto> _classService;
 
-        public ClassController(IValidator<RegisterClassDto> registerClassValidator, IClassService<ServiceResult<ClassDto>, RegisterClassDto> classService)
+        public ClassController(
+            IValidator<RegisterClassDto> registerClassValidator, 
+            IClassService<ServiceResult<ClassDto>, RegisterClassDto> classService,
+            IValidator<RegisterAttendanceDto> registerAttendanceValidator)
         {
             _registerClassValidator = registerClassValidator;
             _classService = classService;
+            _registerAttendanceValidator = registerAttendanceValidator;
         }
 
-        [Authorize(Roles = nameof(UserRole.Maestro))]
         [HttpGet]
         public async Task<ActionResult<ApiResponse<ICollection<ClassListDto>>>> GetClasses([FromQuery]int page)
         {
@@ -46,14 +52,140 @@ namespace redil_backend.Controllers
             });
         }
 
-        [Authorize(Roles = nameof(UserRole.Maestro))]
-        [HttpPut("assist")]
-        public async Task<ActionResult<ApiResponse<>>> PassAssist()
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ApiResponse<ClassDetailsDto>>> GetClassDetail([FromRoute]int id)
         {
-            return Ok();
+            if(id == 0)
+            {
+                return BadRequest(new ApiResponse<ClassDetailsDto>
+                {
+                    Success = false,
+                    Message = "El id de la clase es invalido."
+                });
+            }
+
+            var classExists = await _classService.ClassExists(id);
+            if(!classExists)
+            {
+                return NotFound(new ApiResponse<ClassDetailsDto>
+                {
+                    Success = false,
+                    Message = "La clase no existe."
+                });
+            }
+
+            var classResult = await _classService.GetClassDetail(id);
+            if(!classResult.Success || classResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<ClassDetailsDto>
+                {
+                    Success = false,
+                    Message = classResult.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<ClassDetailsDto>
+            {
+                Success = true,
+                Data = classResult.Data
+            });
         }
 
-        [Authorize(Roles = nameof(UserRole.Maestro))]
+        [HttpPut("assist/{id}")]
+        public async Task<ActionResult<ApiResponse<string>>> PassAssist([FromRoute]int id)
+        {
+            if(id == 0)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "El id de la clase es invalido."
+                });
+            }
+
+            var classExists = await _classService.ClassExists(id);
+            if(!classExists)
+            {
+                return NotFound(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "La clase no existe."
+                });
+            }
+
+            var assistResult = await _classService.PassAssist(id);
+            if(!assistResult.Success || assistResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = assistResult.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<string>
+            {
+                Success = true,
+                Message = "Asistencia iniciada con exito.",
+                Data = assistResult.Data
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("assist/register/{attendanceToken}")]
+        public async Task<ActionResult<ApiResponse<string>>> RegisterAssist([FromRoute]string attendanceToken, [FromBody]RegisterAttendanceDto registerAssistDto)
+        {
+            if(attendanceToken.IsNullOrEmpty())
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "El token de la clase es invalido."
+                });
+            }
+
+            var classExists = await _classService.ClassExists(attendanceToken);
+            if(!classExists)
+            {
+                return NotFound(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "La clase no existe."
+                });
+            }
+
+            var validationResult = await _registerAttendanceValidator.ValidateAsync(registerAssistDto);
+            if(!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Errores de validacion.",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            var registerResult = await _classService.RegisterAssist(attendanceToken, registerAssistDto);
+            if(!registerResult.Success || registerResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = registerResult.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<string>
+            {
+                Success = true,
+                Message = "Asistencia registrada con exito.",
+            });
+        }
+
         [HttpPost("register")]
         public async Task<ActionResult<ApiResponse<ClassDto>>> RegisterClass([FromBody]RegisterClassDto registerClassDto)
         {

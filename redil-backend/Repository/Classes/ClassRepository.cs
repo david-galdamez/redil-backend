@@ -16,6 +16,18 @@ namespace redil_backend.Repository.Classes
         public async Task Add(Class classes) =>
             await _context.Classes.AddAsync(classes);
 
+        public async Task<bool> Exists(int classId) =>
+            await _context.Classes.AnyAsync(c => c.Id == classId);
+
+        public async Task<bool> Exists(string attendanceToken) =>
+            await _context.Classes.AnyAsync(c => c.AttendanceToken != null && c.AttendanceToken.Equals(attendanceToken));
+
+        public async Task<Class?> GetByAttendanceToken(string attendanceToken) =>
+            await _context.Classes.FirstOrDefaultAsync(c => c.AttendanceToken != null && c.AttendanceToken.Equals(attendanceToken));
+
+        public async Task<Class?> GetById(int classId) =>
+            await _context.Classes.FirstOrDefaultAsync(c => c.Id == classId);
+
         public async Task<ICollection<ClassListDto>> GetClasses(int teacherId, int page)
         {
             var query = _context.Classes
@@ -34,5 +46,11 @@ namespace redil_backend.Repository.Classes
 
         public async Task Save() =>
             await _context.SaveChangesAsync();
+
+        public async Task Update(Class classes)
+        {
+            _context.Classes.Attach(classes);
+            _context.Entry(classes).State = EntityState.Modified;
+        }
     }
 }

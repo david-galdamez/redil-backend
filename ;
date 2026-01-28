@@ -1,4 +1,4 @@
-﻿using redil_backend.Dtos.Classes;
+using redil_backend.Dtos.Classes;
 
 namespace redil_backend.Repository.Classes
 {
@@ -6,11 +6,7 @@ namespace redil_backend.Repository.Classes
     {
         Task<ICollection<ClassListDto>> GetClasses(int teacherId, int page);
         Task<bool> Exists(int classId);
-        Task<bool> Exists(string attendanceToken);
         Task Add(T classes);
-        Task Update(T classes);
-        Task<T?> GetById(int classId);
-        Task<T?> GetByAttendanceToken(string attendanceToken);
         Task Save();
     }
 }

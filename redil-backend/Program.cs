@@ -11,6 +11,7 @@ using redil_backend.Dtos.Teacher;
 using redil_backend.Middlewares;
 using redil_backend.Models;
 using redil_backend.Repository.Auth;
+using redil_backend.Repository.ClassDetails;
 using redil_backend.Repository.Classes;
 using redil_backend.Repository.Groups;
 using redil_backend.Repository.Redil;
@@ -52,6 +53,8 @@ builder.Services.AddScoped<IValidator<RegisterTeacherDto>, RegisterTeacherValida
 builder.Services.AddScoped<IClassRepository<Class>, ClassRepository>();
 builder.Services.AddScoped<IClassService<ServiceResult<ClassDto>, RegisterClassDto>, ClassService>();
 builder.Services.AddScoped<IValidator<RegisterClassDto>, RegisterClassValidator>();
+builder.Services.AddScoped<IValidator<RegisterAttendanceDto>, RegisterAssistValidator>();
+builder.Services.AddScoped<IClassDetailsRepository<ClassDetail>, ClassDetailsRepository>();
 
 // Students
 builder.Services.AddScoped<IStudentService<ServiceResult<int>, RegisterStudentDto>, StudentService>();

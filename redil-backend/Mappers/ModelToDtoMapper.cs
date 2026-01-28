@@ -29,5 +29,10 @@ namespace redil_backend.Mappers
         {
             return new ClassDto(classes.RedilId, classes.TeacherId, classes.ClassDate, classes.ClassDescription);
         }
+
+        public static ClassDetailsDto ToClassDetailsDto(this Class classes)
+        {
+            return new ClassDetailsDto(classes.Id, classes.ClassDescription, classes.ClassDate);
+        }
     }
 }
