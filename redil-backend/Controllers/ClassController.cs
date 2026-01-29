@@ -35,6 +35,11 @@ namespace redil_backend.Controllers
         {
             var teacherId = User.GetUserId();
 
+            if(page < 1)
+            {
+                page = 1;
+            }
+
             var classesResult = await _classService.GetClasses(teacherId, page);
             if(!classesResult.Success || classesResult.Data == null)
             {

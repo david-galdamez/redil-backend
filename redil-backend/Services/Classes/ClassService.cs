@@ -104,9 +104,14 @@ namespace redil_backend.Services.Classes
 
             var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
             var studentModel = await _studentRepository.GetStudentByEmail(registerAttendanceDto.Email);
-            if(studentModel == null || classModel == null)
+            if(classModel == null)
             {
-                return ServiceResult<ClassDto>.Fail("Clase o estudiante no encontrado.");
+                return ServiceResult<ClassDto>.Fail("Clase no encontrada.");
+            }
+
+            if(studentModel == null)
+            {
+                return ServiceResult<ClassDto>.Fail("Estudiante no registrado.");
             }
 
             var classDetail = await _classDetailsRepository.GetClassDetail(classModel.Id, studentModel.Id);

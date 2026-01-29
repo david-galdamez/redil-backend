@@ -65,7 +65,7 @@ namespace redil_backend.Services.Students
                 await _studentRedilRepository.Add(new StudentRedil
                 {
                     StudentId = newStudent.Id,
-                    RedilId = redilId.Value
+                    RedilId = redilId.Value,
                 });
                 await _studentRedilRepository.Save();
 

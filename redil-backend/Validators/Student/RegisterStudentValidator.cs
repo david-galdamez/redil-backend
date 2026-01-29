@@ -14,7 +14,7 @@ namespace redil_backend.Validators.Student
                 .NotEmpty().WithMessage("El correo electronico es requerido")
                 .EmailAddress().WithMessage("El correo electronico no es valido");
             RuleFor(x => x.IsServer)
-                .NotEmpty().WithMessage("El campo servidor es requerido");
+                .NotNull().WithMessage("El campo servidor es requerido");
             RuleFor(x => x.GroupId)
                 .NotEmpty().WithMessage("El Id del grupo es requerido")
                 .GreaterThan(0).WithMessage("El Id tiene que ser valido");

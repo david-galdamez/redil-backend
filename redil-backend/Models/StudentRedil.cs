@@ -21,7 +21,7 @@ public partial class StudentRedil
 
     public DateTime JoinedAt { get; set; }
 
-    public bool Active { get; set; }
+    public bool Active { get; set; } = true;
 
 
 }

@@ -18,7 +18,7 @@ namespace redil_backend.Validators.Teacher
             RuleFor(x => x.RedilId)
                 .GreaterThan(0).WithMessage("El Id debe ser un numero valido");
 
-            RuleFor(x => x.IsActive).NotEmpty().WithMessage("El estado de actividad no puede estar vacío.");
+            RuleFor(x => x.IsActive).NotNull().WithMessage("El estado de actividad no puede estar vacío.");
         }
     }
 }
