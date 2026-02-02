@@ -22,8 +22,9 @@ namespace redil_backend.Controllers
 
         public ClassController(
             IValidator<RegisterClassDto> registerClassValidator, 
+            IValidator<RegisterAttendanceDto> registerAttendanceValidator,
             IClassService<ServiceResult<ClassDto>, RegisterClassDto> classService,
-            IValidator<RegisterAttendanceDto> registerAttendanceValidator)
+            IValidator<ClassStatsRequestDto> classStatsRequestValidator)
         {
             _registerClassValidator = registerClassValidator;
             _classService = classService;

@@ -1,4 +1,5 @@
 ﻿using redil_backend.Dtos.Classes;
+using redil_backend.Dtos.Redil;
 
 namespace redil_backend.Services.Classes
 {
@@ -12,5 +13,6 @@ namespace redil_backend.Services.Classes
         Task<ServiceResult<string>> PassAssist(int classId);
         Task<bool> ValidateAssistToken(string attendanceToken);
         Task<T> RegisterAssist(string attendanceToken, RegisterAttendanceDto registerAttendanceDto);
+        Task<ServiceResult<ICollection<RedilClassStatDto>>> GetRedilStats(int? redilId, ClassStatsRequestDto classStatsRequest);
     }
 }

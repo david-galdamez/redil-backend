@@ -19,6 +19,11 @@ namespace redil_backend.Services.Redil
             return await _redilRepository.GetAllRediles();
         }
 
+        public async Task<bool> RedilExists(int id)
+        {
+            return await _redilRepository.DoesRedilExists(id);
+        }
+
         public async Task<ServiceResult<RedilDto>> RegisterRedil(RegisterRedilDto registerRedilDto)
         {
 

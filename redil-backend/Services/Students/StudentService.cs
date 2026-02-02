@@ -54,7 +54,7 @@ namespace redil_backend.Services.Students
                 return ServiceResult<int>.Fail("El grupo no existe.");
             }
 
-            var student = await _studentsRepository.GetStudentByEmail(registerStudentDto.Email);
+            var student = await _studentsRepository.GetStudentByEmail(registerStudentDto.Email, redilId.Value);
             if (student == null)
             {
                 var newStudent = registerStudentDto.ToStudentModel();

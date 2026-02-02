@@ -1,6 +1,7 @@
 ﻿using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
 using redil_backend.Dtos.Classes;
+using redil_backend.Dtos.Groups;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Student;
 using redil_backend.Dtos.Teacher;
@@ -59,6 +60,14 @@ namespace redil_backend.Mappers
                 Email = registerStudentDto.Email,
                 GroupId = registerStudentDto.GroupId,
                 IsServer = registerStudentDto.IsServer,
+            };
+        }
+
+        public static Group ToGroupModel(this RegisterGroupDto registerGroupDto)
+        {
+            return new Group
+            {
+                Name = registerGroupDto.Name,
             };
         }
     }

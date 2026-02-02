@@ -2,10 +2,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using redil_backend.Domain.Enums;
+using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Responses;
 using redil_backend.Services;
+using redil_backend.Services.Classes;
+using redil_backend.Services.Groups;
 using redil_backend.Services.Redil;
 
 namespace redil_backend.Controllers
@@ -17,11 +21,22 @@ namespace redil_backend.Controllers
 
         private IValidator<RegisterRedilDto> _registerRedilValidator;
         private IRedilService<ServiceResult<RedilDto>, RegisterRedilDto> _redilService;
+        private IValidator<ClassStatsRequestDto> _classStatsRequestValidator;
+        private IClassService<ServiceResult<ClassDto>, RegisterClassDto> _classService;
+        private IGroupService<ServiceResult<int>> _groupService;
 
-        public RedilController(IRedilService<ServiceResult<RedilDto>, RegisterRedilDto> redilService, IValidator<RegisterRedilDto> registerRedilValidator)
+        public RedilController(
+            IRedilService<ServiceResult<RedilDto>, RegisterRedilDto> redilService,
+            IValidator<RegisterRedilDto> registerRedilValidator,
+            IClassService<ServiceResult<ClassDto>, RegisterClassDto> classService,
+            IValidator<ClassStatsRequestDto> classStatsRequestValidator,
+            IGroupService<ServiceResult<int>> groupService)
         {
             _redilService = redilService;
             _registerRedilValidator = registerRedilValidator;
+            _classStatsRequestValidator = classStatsRequestValidator;
+            _classService = classService;
+            _groupService = groupService;
         }
 
         [HttpGet]
@@ -34,6 +49,68 @@ namespace redil_backend.Controllers
                 Success = true,
                 Message = "Rediles obtenidos.",
                 Data = rediles
+            });
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpGet("stats")]
+        public async Task<ActionResult<ApiResponse<RedilClassStatDto>>> GetRedilStats([FromBody]ClassStatsRequestDto classStatsRequest)
+        {
+            var validationResult = await _classStatsRequestValidator.ValidateAsync(classStatsRequest);
+            if(!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                {
+                    Success = false,
+                    Message = "Errores de validacion.",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            if (classStatsRequest.GroupId.HasValue)
+            {
+                var validGroup = await _groupService.ValidateGroup(classStatsRequest.GroupId.Value);
+                if (!validGroup.Success || !validGroup.Data)
+                {
+                    return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                    {
+                        Success = false,
+                        Message = "Id del grupo no existe."
+                    });
+                }
+            }
+
+            if (classStatsRequest.RedilId.HasValue)
+            {
+                var validRedil = await _redilService.RedilExists(classStatsRequest.RedilId.Value);
+                if (!validRedil)
+                {
+                    return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                    {
+                        Success = false,
+                        Message = "Id del grupo no existe."
+                    });
+                }
+            }
+
+            var classStats = await _classService.GetRedilStats(classStatsRequest.RedilId, classStatsRequest);
+            if (!classStats.Success || classStats.Data == null)
+            {
+                return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                {
+                    Success = false,
+                    Message = classStats.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<ICollection<RedilClassStatDto>>
+            {
+                Success = true,
+                Data = classStats.Data
             });
         }
 

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using redil_backend.Dtos.Auth;
 using redil_backend.Dtos.Classes;
+using redil_backend.Dtos.Groups;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Student;
 using redil_backend.Dtos.Teacher;
@@ -20,11 +21,13 @@ using redil_backend.Repository.Students;
 using redil_backend.Services;
 using redil_backend.Services.Auth;
 using redil_backend.Services.Classes;
+using redil_backend.Services.Groups;
 using redil_backend.Services.Redil;
 using redil_backend.Services.Students;
 using redil_backend.Services.Teacher;
 using redil_backend.Validators.Auth;
 using redil_backend.Validators.Classes;
+using redil_backend.Validators.Group;
 using redil_backend.Validators.Redil;
 using redil_backend.Validators.Student;
 using redil_backend.Validators.Teacher;
@@ -48,20 +51,26 @@ builder.Services.AddScoped<IValidator<RegisterRedilDto>, RegisterRedilValidator>
 // Teacher
 builder.Services.AddScoped<ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto, UpdateTeacherDto>, TeacherService>();
 builder.Services.AddScoped<IValidator<RegisterTeacherDto>, RegisterTeacherValidator>();
+builder.Services.AddScoped<IValidator<UpdateTeacherDto>, UpdateTeacherValidator>();
 
 // Classes
 builder.Services.AddScoped<IClassRepository<Class>, ClassRepository>();
 builder.Services.AddScoped<IClassService<ServiceResult<ClassDto>, RegisterClassDto>, ClassService>();
 builder.Services.AddScoped<IValidator<RegisterClassDto>, RegisterClassValidator>();
 builder.Services.AddScoped<IValidator<RegisterAttendanceDto>, RegisterAssistValidator>();
+builder.Services.AddScoped<IValidator<ClassStatsRequestDto>, StatClassRequestValidator>();
 builder.Services.AddScoped<IClassDetailsRepository<ClassDetail>, ClassDetailsRepository>();
 
 // Students
 builder.Services.AddScoped<IStudentService<ServiceResult<int>, RegisterStudentDto>, StudentService>();
 builder.Services.AddScoped<IStudentRepository<Student>, StudentRepository>();
 builder.Services.AddScoped<IStudentRedilRepository<StudentRedil>, StudentRedilRepository>();
-builder.Services.AddScoped<IGroupRepository<Group>, GroupRepository>();
 builder.Services.AddScoped<IValidator<RegisterStudentDto>, RegisterStudentValidator>();
+
+// Groups
+builder.Services.AddScoped<IGroupService<ServiceResult<int>>, GroupService>();
+builder.Services.AddScoped<IGroupRepository<Group>, GroupRepository>();
+builder.Services.AddScoped<IValidator<RegisterGroupDto>, RegisterGroupValidator>();
 
 // Password Hasher
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();

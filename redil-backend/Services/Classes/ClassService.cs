@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using redil_backend.Dtos.Classes;
+using redil_backend.Dtos.Redil;
 using redil_backend.Mappers;
 using redil_backend.Models;
 using redil_backend.Repository.ClassDetails;
@@ -58,6 +59,33 @@ namespace redil_backend.Services.Classes
             return ServiceResult<ICollection<ClassListDto>>.Ok(classes);
         }
 
+        public async Task<ServiceResult<ICollection<RedilClassStatDto>>> GetRedilStats(int? redilId, ClassStatsRequestDto classStatsRequest)
+        {
+            var details = await _classDetailsRepository.GetClassDetailsForStats(redilId, classStatsRequest.FromDate, classStatsRequest.ToDate, classStatsRequest.GroupId);
+            if (!details.Any())
+            {
+                return ServiceResult<ICollection<RedilClassStatDto>>.Ok(new List<RedilClassStatDto>());
+            }
+
+            var totalClasses = details.Select(d => d.Class.ClassDate.Date).Distinct().Count();
+
+            var stats = details.GroupBy(d => new
+            {
+                d.Student,
+                d.Class.Redil.Name
+            })
+                .Select(g =>
+                {
+                    var attended = g.Count(d => d.Attendance);
+
+                    var porcentage = totalClasses == 0 ? 0 : (float)attended / totalClasses * 100;
+
+                    return new RedilClassStatDto(g.Key.Student.Name, g.Key.Student.Group.Name, g.Key.Name, g.Key.Student.IsServer, porcentage);
+                }).ToList();
+
+            return ServiceResult<ICollection<RedilClassStatDto>>.Ok(stats);
+        }
+
         public async Task<ServiceResult<string>> PassAssist(int classId)
         {
             var classModel = await _classRepository.GetById(classId);
@@ -103,15 +131,15 @@ namespace redil_backend.Services.Classes
             }
 
             var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
-            var studentModel = await _studentRepository.GetStudentByEmail(registerAttendanceDto.Email);
             if(classModel == null)
             {
                 return ServiceResult<ClassDto>.Fail("Clase no encontrada.");
             }
 
+            var studentModel = await _studentRepository.GetStudentByEmail(registerAttendanceDto.Email, classModel.RedilId);
             if(studentModel == null)
             {
-                return ServiceResult<ClassDto>.Fail("Estudiante no registrado.");
+                return ServiceResult<ClassDto>.Fail("Correo no registrado en el redil.");
             }
 
             var classDetail = await _classDetailsRepository.GetClassDetail(classModel.Id, studentModel.Id);
