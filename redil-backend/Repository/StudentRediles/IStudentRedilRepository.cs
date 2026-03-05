@@ -7,6 +7,7 @@ namespace redil_backend.Repository.StudentRediles
         Task Add(T entity);
         Task Update(T entity);
         Task<StudentRedil?> GetActiveRelation(int studentId);
+        Task<StudentRedil?> GetRelation(int studentId, int redilId);
         Task<ICollection<StudentRedil>> GetStudents(int redilId);
         Task Save();
     }

@@ -19,7 +19,7 @@ public partial class StudentRedil
     public int RedilId { get; set; }
     public Redile Redil { get; set; } = null!;
 
-    public DateTime JoinedAt { get; set; }
+    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 
     public bool Active { get; set; } = true;
 

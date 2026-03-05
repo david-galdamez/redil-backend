@@ -52,6 +52,68 @@ namespace redil_backend.Controllers
             });
         }
 
+        [Authorize(Roles = nameof(UserRole.Maestro))]
+        [HttpGet("code")]
+        public async Task<ActionResult<ApiResponse<string>>> GetRedilCode()
+        {
+
+            var redilId = User.GetRedilId();
+            if(!redilId.HasValue)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "El usuario no tiene un redil asignado."
+                });
+            }
+
+            var validRedil = await _redilService.RedilExists(redilId.Value);
+            if (!validRedil)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Id del redil no existe."
+                });
+            }
+            var codeResult = await _redilService.GetRedilCode(redilId.Value);
+            if (!codeResult.Success || codeResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = codeResult.ErrorMessage ?? "Error al obtener el código del redil."
+                });
+            }
+            return Ok(new ApiResponse<string>
+            {
+                Success = true,
+                Message = "Código del redil obtenido.",
+                Data = codeResult.Data
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{code}")]
+        public async Task<ActionResult<ApiResponse<RedilDto>>> GetRedilByCode([FromRoute]string code)
+        {
+            var redilIdResult = await _redilService.GetRedilByCode(code);
+            if (!redilIdResult.Success || redilIdResult.Data == null)
+            {
+                return NotFound(new ApiResponse<RedilDto>
+                {
+                    Success = false,
+                    Message = redilIdResult.ErrorMessage ?? "Error al obtener el redil por código."
+                });
+            }
+            return Ok(new ApiResponse<RedilDto>
+            {
+                Success = true,
+                Message = "Redil obtenido con exito.",
+                Data = redilIdResult.Data
+            });
+        }
+
         [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpGet("stats")]
         public async Task<ActionResult<ApiResponse<RedilClassStatDto>>> GetRedilStats([FromBody]ClassStatsRequestDto classStatsRequest)

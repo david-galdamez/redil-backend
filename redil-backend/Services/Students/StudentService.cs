@@ -54,7 +54,7 @@ namespace redil_backend.Services.Students
                 return ServiceResult<int>.Fail("El grupo no existe.");
             }
 
-            var student = await _studentsRepository.GetStudentByEmail(registerStudentDto.Email, redilId.Value);
+            var student = await _studentsRepository.GetStudentByEmail(registerStudentDto.Email);
             if (student == null)
             {
                 var newStudent = registerStudentDto.ToStudentModel();
@@ -75,20 +75,28 @@ namespace redil_backend.Services.Students
             student.Name = registerStudentDto.Name;
             student.IsServer = registerStudentDto.IsServer;
             student.GroupId = registerStudentDto.GroupId;
+            student.UpdatedAt = DateTime.UtcNow;
 
             await _studentsRepository.Update(student);
+            await _studentsRepository.Save();
+
+            var relation = await _studentRedilRepository.GetRelation(student.Id, redilId.Value);
+            if(relation != null)
+            {
+                relation.Active = true;
+                relation.JoinedAt = DateTime.UtcNow;
+
+                await _studentRedilRepository.Update(relation);
+                await _studentRedilRepository.Save();
+
+                return ServiceResult<int>.Ok(student.Id);
+            }
 
             var activeRelation = await _studentRedilRepository.GetActiveRelation(student.Id);
-            if(activeRelation != null)
+            if (activeRelation != null)
             {
-                if(activeRelation.RedilId == redilId.Value)
-                {
-                    return ServiceResult<int>.Ok(student.Id);
-                }
-
                 activeRelation.Active = false;
                 await _studentRedilRepository.Update(activeRelation);
-                await _studentRedilRepository.Save();
             }
 
             await _studentRedilRepository.Add(new StudentRedil
@@ -96,6 +104,7 @@ namespace redil_backend.Services.Students
                 StudentId = student.Id,
                 RedilId = redilId.Value
             });
+            await _studentRedilRepository.Save();
 
             return ServiceResult<int>.Ok(student.Id);
         }

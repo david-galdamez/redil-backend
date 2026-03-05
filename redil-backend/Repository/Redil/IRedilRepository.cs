@@ -8,6 +8,8 @@ namespace redil_backend.Repository.Redil
         Task<T?> GetRedilById(int id);
 
         Task<int?> GetRedilIdByCode(string code);
+        Task<string?> GetRedilCodeById(int id);
+        Task<T?> GetRedilByCode(string code);
 
         Task<IEnumerable<RedilListDto>> GetAllRediles();
 

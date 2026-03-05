@@ -7,7 +7,8 @@ namespace redil_backend.Repository.Students
     {
         Task<bool> ValidateStudent(string email);
 
-        Task<Student?> GetStudentByEmail(string email, int redilId);
+        Task<Student?> GetStudentByEmail(string email);
+        Task<Student?> GetStudentByEmail(string email, int id);
         Task<IEnumerable<StudentListDto>> GetStudentsByRedilId(int redilId);
         Task Add(T student);
         Task Update(T student);

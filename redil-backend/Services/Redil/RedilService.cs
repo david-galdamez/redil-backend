@@ -14,6 +14,30 @@ namespace redil_backend.Services.Redil
             _redilRepository = redilRepository;
         }
 
+        public async Task<ServiceResult<RedilDto>> GetRedilByCode(string code)
+        {
+            var redil = await _redilRepository.GetRedilByCode(code);
+
+            if(redil == null)
+            {
+                return ServiceResult<RedilDto>.Fail("Redil no encontrado.");
+            }
+
+            var redilDto = redil.ToRedilDto();
+            return ServiceResult<RedilDto>.Ok(redilDto);
+        }
+
+        public async Task<ServiceResult<string>> GetRedilCode(int redilId)
+        {
+            var redilCode = await _redilRepository.GetRedilCodeById(redilId);
+            if(redilCode == null)
+            {
+                return ServiceResult<string>.Fail("Redil no encontrado.");
+            }
+
+            return ServiceResult<string>.Ok(redilCode);
+        }
+
         public async Task<IEnumerable<RedilListDto>> GetRediles()
         {
             return await _redilRepository.GetAllRediles();

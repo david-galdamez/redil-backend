@@ -6,6 +6,8 @@ namespace redil_backend.Services.Redil
     {
         Task<IEnumerable<RedilListDto>> GetRediles();
         Task<T> RegisterRedil(Tr registerRedilDto);
+        Task<ServiceResult<string>> GetRedilCode(int redilId);
+        Task<T> GetRedilByCode(string code);
         Task<bool> RedilExists(int id);
     }
 }

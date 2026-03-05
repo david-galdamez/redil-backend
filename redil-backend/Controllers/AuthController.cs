@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
 using redil_backend.Dtos.Responses;
 using redil_backend.Services;
@@ -72,6 +73,7 @@ namespace redil_backend.Controllers
             });
         }
 
+        [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpPost("register_admin")]
         public async Task<ActionResult<ApiResponse<UserDto>>> Register([FromBody]AuthRegisterDto authRegisterDto)
         {
@@ -117,6 +119,7 @@ namespace redil_backend.Controllers
             });
         }
 
+        [Authorize]
         [HttpPost("logout")]
         public async Task<ActionResult<ApiResponse<UserDto>>> Logout()
         {
@@ -127,6 +130,13 @@ namespace redil_backend.Controllers
                 Success = true,
                 Message = "Cierre de sesion exitoso.",
             });
+        }
+
+        [Authorize]
+        [HttpGet("loged-in")]
+        public IActionResult IsLogedIn()
+        {
+            return NoContent();
         }
     }
 }
