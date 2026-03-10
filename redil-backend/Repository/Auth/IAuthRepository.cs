@@ -8,6 +8,7 @@ namespace redil_backend.Repository.Auth
         Task<TEntity?> GetUserByEmail(string email);
         Task<IEnumerable<TeacherListDto>> GetAllTeachers();
         Task<TEntity> GetTeacher(int teacherId);
+        Task<TEntity?> GetUserById(int id);
         Task<bool> TeacherExists(string email);
         Task<bool> TeacherExists(int teacherId);
         Task Add(TEntity entity);

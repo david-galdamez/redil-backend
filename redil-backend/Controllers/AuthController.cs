@@ -131,12 +131,5 @@ namespace redil_backend.Controllers
                 Message = "Cierre de sesion exitoso.",
             });
         }
-
-        [Authorize]
-        [HttpGet("loged-in")]
-        public IActionResult IsLogedIn()
-        {
-            return NoContent();
-        }
     }
 }

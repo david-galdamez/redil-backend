@@ -31,6 +31,9 @@ namespace redil_backend.Repository.Auth
             return await _context.Users.FirstOrDefaultAsync(u => u.Email.Equals(email));
         }
 
+        public async Task<User?> GetUserById(int id) =>
+            await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+
         public async Task Save() =>
             await _context.SaveChangesAsync();
 

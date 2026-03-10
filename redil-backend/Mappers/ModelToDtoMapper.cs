@@ -15,6 +15,14 @@ namespace redil_backend.Mappers
             return new UserDto(user.Id, user.Name, user.Email, (UserRole)user.RoleId, user.RedilId);
         }
 
+        public static LogedUserDto ToLogedUserDto(this User user)
+        {
+
+            var role = ((UserRole)user.RoleId).ToString();
+
+            return new LogedUserDto(user.Id, user.Name, role);
+        }
+
         public static TeacherDto ToTeacherDto(this User teacher)
         {
             return new TeacherDto(teacher.Name, teacher.Email, teacher.Redil?.Id ?? 0, teacher.IsActive);

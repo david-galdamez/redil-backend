@@ -47,7 +47,7 @@ namespace redil_backend.Mappers
             {
                 RedilId = RedilId,
                 TeacherId = TeacherId,
-                ClassDate = registerClassDto.Date,
+                ClassDate = registerClassDto.Date.ToUniversalTime(),
                 ClassDescription = registerClassDto.Description,
             };
         }

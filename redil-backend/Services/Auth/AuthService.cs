@@ -65,5 +65,18 @@ namespace redil_backend.Services.Auth
 
             return result == null;
         }
+
+        public async Task<ServiceResult<LogedUserDto>> GetUserById(int id)
+        {
+            var user = await _authRepository.GetUserById(id);
+            if(user == null)
+            {
+                return ServiceResult<LogedUserDto>.Fail("Usuario no encontrado.");
+            }
+
+            var logedUserDto = user.ToLogedUserDto();
+
+            return ServiceResult<LogedUserDto>.Ok(logedUserDto);
+        }
     }
 }
