@@ -21,7 +21,7 @@ public partial class User
     [Required, MaxLength(255)]
     public string Password { get; set; } = null!;
 
-    public bool IsActive { get; set; }
+    public bool IsActive { get; set; } = true;
 
     [Required]
     public int RoleId { get; set; }

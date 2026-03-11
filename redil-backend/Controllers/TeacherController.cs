@@ -44,9 +44,15 @@ namespace redil_backend.Controllers
 
         [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<IEnumerable<TeacherListDto>>>> GetTeachers()
+        public async Task<ActionResult<ApiResponse<IEnumerable<TeacherListDto>>>> GetTeachers([FromQuery] int page)
         {
-            var teachers = await _teacherService.GetTeachers();
+        
+            if(page < 1)
+            {
+                page = 1;
+            }
+
+            var teachers = await _teacherService.GetTeachers(page);
 
             return Ok(new ApiResponse<IEnumerable<TeacherListDto>>
             {

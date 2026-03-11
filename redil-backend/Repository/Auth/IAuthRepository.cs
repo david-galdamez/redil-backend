@@ -6,7 +6,7 @@ namespace redil_backend.Repository.Auth
     public interface IAuthRepository<TEntity>
     {
         Task<TEntity?> GetUserByEmail(string email);
-        Task<IEnumerable<TeacherListDto>> GetAllTeachers();
+        Task<IEnumerable<TeacherListDto>> GetAllTeachers(int page);
         Task<TEntity> GetTeacher(int teacherId);
         Task<TEntity?> GetUserById(int id);
         Task<bool> TeacherExists(string email);

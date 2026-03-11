@@ -17,10 +17,19 @@ namespace redil_backend.Repository.Auth
         public async Task Add(User entity) =>
             await _context.Users.AddAsync(entity);
 
-        public async Task<IEnumerable<TeacherListDto>> GetAllTeachers()
+        public async Task<IEnumerable<TeacherListDto>> GetAllTeachers(int page)
         {
-            return await _context.Users.Where(t => t.RoleId == (int)UserRole.Maestro)
-                .Select(t => new TeacherListDto(t.Id, t.Name, t.Redil == null ? "Sin Redil Asignado" : t.Redil.Name)).ToListAsync();
+            var query = _context.Users.Where(t => t.RoleId == (int)UserRole.Maestro).OrderBy(t => t.Id);
+
+            var pageSize = 10;
+            var recordsToSkip = (page - 1) * pageSize;
+
+            var paginatedTeachers = await query.Skip(recordsToSkip)
+                .Take(pageSize)
+                .Select(t => new TeacherListDto(t.Id, t.Name, t.Redil == null ? "Sin Redil Asignado" : t.Redil.Name))
+                .ToListAsync();
+
+            return paginatedTeachers;
         }
 
         public async Task<User> GetTeacher(int teacherId) =>

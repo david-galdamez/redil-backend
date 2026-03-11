@@ -27,9 +27,9 @@ namespace redil_backend.Services.Teacher
             return ServiceResult<TeacherDto>.Ok(teacherDto);
         }
 
-        public async Task<ServiceResult<IEnumerable<TeacherListDto>>> GetTeachers()
+        public async Task<ServiceResult<IEnumerable<TeacherListDto>>> GetTeachers(int page)
         {
-            var teachers = await _authRepository.GetAllTeachers();
+            var teachers = await _authRepository.GetAllTeachers(page);
 
             return ServiceResult<IEnumerable<TeacherListDto>>.Ok(teachers);
         }

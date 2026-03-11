@@ -9,6 +9,6 @@ namespace redil_backend.Services.Teacher
         Task<T> GetTeacher(int id);
         Task<bool> TeacherExists(string email);
         Task<bool> TeacherExists(int id);
-        Task<ServiceResult<IEnumerable<TeacherListDto>>> GetTeachers();
+        Task<ServiceResult<IEnumerable<TeacherListDto>>> GetTeachers(int page);
     }
 }
