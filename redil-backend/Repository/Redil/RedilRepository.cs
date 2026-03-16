@@ -20,8 +20,20 @@ namespace redil_backend.Repository.Redil
         public async Task Add(Redile redil) =>
             await _context.Rediles.AddAsync(redil);
 
-        public async Task<Redile?> GetRedilById(int id) =>
-            await _context.Rediles.FindAsync(id);
+        public async Task<RedilDetailsDto?> GetRedilById(int id)
+        {
+            var redil = await _context.Rediles
+                .Include(r => r.Users)
+                .Where(r => r.Id == id)
+                .Select(r => new RedilDetailsDto(
+                    r.Id, r.Name, r.Description ?? "",
+                    r.Users
+                            .Select(u => new RedilTeacherList(u.Id, u.Name, u.Email)
+                )))
+                .FirstOrDefaultAsync();
+
+            return redil;
+        }
 
         public async Task<Redile?> GetRedilByName(string name) =>
             await _context.Rediles.FirstOrDefaultAsync(r => r.Name.Equals(name));
@@ -48,5 +60,14 @@ namespace redil_backend.Repository.Redil
 
         public async Task<Redile?> GetRedilByCode(string code) =>
             await _context.Rediles.FirstOrDefaultAsync(r => r.Code.Equals(code));
+
+        public async Task<Redile?> GetRedil(int id) =>
+            await _context.Rediles.FirstOrDefaultAsync(r => r.Id == id);
+
+        public async Task Update(Redile redil)
+        {
+            _context.Rediles.Attach(redil);
+            _context.Entry(redil).State = EntityState.Modified;
+        }
     }
 }

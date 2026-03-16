@@ -27,6 +27,17 @@ namespace redil_backend.Services.Redil
             return ServiceResult<RedilDto>.Ok(redilDto);
         }
 
+        public async Task<ServiceResult<RedilDetailsDto>> GetRedilById(int id)
+        {
+            var redil = await _redilRepository.GetRedilById(id);
+            if(redil == null)
+            {
+                return ServiceResult<RedilDetailsDto>.Fail("Redil no encontrado.");
+            }
+
+            return ServiceResult<RedilDetailsDto>.Ok(redil);
+        }
+
         public async Task<ServiceResult<string>> GetRedilCode(int redilId)
         {
             var redilCode = await _redilRepository.GetRedilCodeById(redilId);
@@ -67,6 +78,29 @@ namespace redil_backend.Services.Redil
             var redilDto = redil.ToRedilDto();
 
             return ServiceResult<RedilDto>.Ok(redilDto);
+        }
+
+        public async Task<ServiceResult<RedilDetailsDto>> UpdateRedil(int id, RegisterRedilDto updateRedilDto)
+        {
+            var redil = await _redilRepository.GetRedil(id);
+            if(redil == null)
+            {
+                return ServiceResult<RedilDetailsDto>.Fail("Redil no existe.");
+            }
+
+            redil.Name = updateRedilDto.Name;
+            redil.Description = updateRedilDto.Description;
+
+            await _redilRepository.Update(redil);
+            await _redilRepository.Save();
+
+            var redilDto = await _redilRepository.GetRedilById(id);
+            if(redilDto == null )
+            {
+                return ServiceResult<RedilDetailsDto>.Fail("Redil no encontrado después de la actualización.");
+            }
+
+            return ServiceResult<RedilDetailsDto>.Ok(redilDto);
         }
     }
 }

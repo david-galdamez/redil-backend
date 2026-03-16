@@ -52,7 +52,7 @@ namespace redil_backend.Controllers
             });
         }
 
-        [Authorize(Roles = nameof(UserRole.Maestro))]
+        [Authorize]
         [HttpGet("code")]
         public async Task<ActionResult<ApiResponse<string>>> GetRedilCode()
         {
@@ -94,7 +94,7 @@ namespace redil_backend.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("{code}")]
+        [HttpGet("code/{code}")]
         public async Task<ActionResult<ApiResponse<RedilDto>>> GetRedilByCode([FromRoute]string code)
         {
             var redilIdResult = await _redilService.GetRedilByCode(code);
@@ -111,6 +111,36 @@ namespace redil_backend.Controllers
                 Success = true,
                 Message = "Redil obtenido con exito.",
                 Data = redilIdResult.Data
+            });
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<RedilDetailsDto>> GetRedilById([FromRoute]int id)
+        {
+            var validRedil = await _redilService.RedilExists(id);
+            if (!validRedil)
+            {
+                return BadRequest(new ApiResponse<RedilDetailsDto>
+                {
+                    Success = false,
+                    Message = "Id del redil no existe."
+                });
+            }
+            var redilResult = await _redilService.GetRedilById(id);
+            if (!redilResult.Success || redilResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<RedilDetailsDto>
+                {
+                    Success = false,
+                    Message = redilResult.ErrorMessage ?? "Error al obtener el redil por id."
+                });
+            }
+            return Ok(new ApiResponse<RedilDetailsDto>
+            {
+                Success = true,
+                Message = "Redil obtenido con exito.",
+                Data = redilResult.Data
             });
         }
 
@@ -177,7 +207,7 @@ namespace redil_backend.Controllers
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
-        [HttpPost("register")]
+        [HttpPost]
         public async Task<ActionResult<ApiResponse<RedilDto>>> RegisterRedil([FromBody]RegisterRedilDto registerRedilDto)
         {
             var validationResult = await _registerRedilValidator.ValidateAsync(registerRedilDto);
@@ -211,6 +241,53 @@ namespace redil_backend.Controllers
                 Success = true,
                 Message = "Redil registrado.",
                 Data = registerResult.Data
+            });
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpPut("{id}")]
+        public async Task<ActionResult<RedilDetailsDto>> UpdateRedil([FromRoute]int id, [FromBody]RegisterRedilDto updateRedilDto)
+        {
+            var validatorResult = await _registerRedilValidator.ValidateAsync(updateRedilDto);
+            if (!validatorResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<RedilDetailsDto>
+                {
+                    Success = false,
+                    Message = "Error de validación.",
+                    Errors = validatorResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            var redilExists = await _redilService.RedilExists(id);
+            if (!redilExists)
+            {
+                return BadRequest(new ApiResponse<RedilDetailsDto>
+                {
+                    Success = false,
+                    Message = "Id del redil no existe."
+                });
+            }
+
+            var updateResult = await _redilService.UpdateRedil(id, updateRedilDto);
+            if (!updateResult.Success || updateResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<RedilDetailsDto>
+                {
+                    Success = false,
+                    Message = updateResult.ErrorMessage ?? "Error al actualizar el redil."
+                });
+            }
+
+            return Ok(new ApiResponse<RedilDetailsDto>
+            {
+                Success = true,
+                Message = "Redil actualizado.",
+                Data = updateResult.Data
             });
         }
     }

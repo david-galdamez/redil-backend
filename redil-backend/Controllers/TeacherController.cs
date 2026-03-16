@@ -208,7 +208,7 @@ namespace redil_backend.Controllers
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
-        [HttpPost("register")]
+        [HttpPost]
         public async Task<ActionResult<ApiResponse<TeacherDto>>> RegisterTeacher([FromBody]RegisterTeacherDto registerTeacherDto)
         {
             var validatorResult = await _registerTeacherValidator.ValidateAsync(registerTeacherDto);
