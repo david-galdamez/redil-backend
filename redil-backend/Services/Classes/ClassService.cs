@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using redil_backend.Dtos;
 using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
 using redil_backend.Mappers;
 using redil_backend.Models;
 using redil_backend.Repository.ClassDetails;
 using redil_backend.Repository.Classes;
+using redil_backend.Repository.Redil;
 using redil_backend.Repository.StudentRediles;
 using redil_backend.Repository.Students;
 using redil_backend.Utils;
@@ -17,17 +19,20 @@ namespace redil_backend.Services.Classes
         private IStudentRedilRepository<StudentRedil> _studentRedilRepository;
         private IClassDetailsRepository<ClassDetail> _classDetailsRepository;
         private IStudentRepository<Student> _studentRepository;
+        private IRedilRepository<Redile> _redilRepository;
 
         public ClassService(
             IClassRepository<Class> classRepository,
             IStudentRedilRepository<StudentRedil> studentRedilRepository,
             IClassDetailsRepository<ClassDetail> classDetailsRepository,
-            IStudentRepository<Student> studentRepository)
+            IStudentRepository<Student> studentRepository,
+            IRedilRepository<Redile> redilRepository)
         {
             _studentRedilRepository = studentRedilRepository;
             _classRepository = classRepository;
             _classDetailsRepository = classDetailsRepository;
             _studentRepository = studentRepository;
+            _redilRepository = redilRepository;
         }
 
         public async Task<bool> ClassExists(int classId)
@@ -38,6 +43,30 @@ namespace redil_backend.Services.Classes
         public async Task<bool> ClassExists(string attendanceToken)
         {
             return await _classRepository.Exists(attendanceToken);
+        }
+
+        public async Task<ServiceResult<AssistStatusDto>> GetAssistStatus(string attendanceToken)
+        {
+            var validAssist = await ValidateAssistToken(attendanceToken);
+            if(!validAssist)
+            {
+                return ServiceResult<AssistStatusDto>.Fail("Token de asistencia inválido o expirado.");
+            }
+
+            var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
+            if(classModel == null)
+            {
+                return ServiceResult<AssistStatusDto>.Fail("Clase no encontrada.");
+            }
+
+            var redil = await _redilRepository.GetRedilById(classModel.RedilId);
+            if(redil == null)
+            {
+                return ServiceResult<AssistStatusDto>.Fail("Redil no encontrado.");
+            }
+
+            var assistStatus = new AssistStatusDto(redil.Name, classModel.ClassDescription, classModel.ClassDate);
+            return ServiceResult<AssistStatusDto>.Ok(assistStatus);
         }
 
         public async Task<ServiceResult<ClassDetailsDto>> GetClassDetail(int classId)
@@ -52,11 +81,11 @@ namespace redil_backend.Services.Classes
             return ServiceResult<ClassDetailsDto>.Ok(classDetail.ToClassDetailsDto());
         }
 
-        public async Task<ServiceResult<ICollection<ClassListDto>>> GetClasses(int teacherId, int page)
+        public async Task<ServiceResult<PaginatedResponse<ClassListDto>>> GetClasses(int teacherId, int page)
         {
             var classes = await _classRepository.GetClasses(teacherId, page);
 
-            return ServiceResult<ICollection<ClassListDto>>.Ok(classes);
+            return ServiceResult<PaginatedResponse<ClassListDto>>.Ok(classes);
         }
 
         public async Task<ServiceResult<ICollection<RedilClassStatDto>>> GetRedilStats(int? redilId, ClassStatsRequestDto classStatsRequest)
@@ -174,7 +203,7 @@ namespace redil_backend.Services.Classes
                 await _classDetailsRepository.Add(new ClassDetail
                 {
                     ClassId = classModel.Id,
-                    StudentId = student.Id,
+                    StudentId = student.StudentId,
                     Attendance = false
                 });
             }

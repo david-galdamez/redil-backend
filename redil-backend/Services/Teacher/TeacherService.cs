@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using redil_backend.Domain.Enums;
+using redil_backend.Dtos;
 using redil_backend.Dtos.Teacher;
 using redil_backend.Mappers;
 using redil_backend.Models;
@@ -27,11 +28,11 @@ namespace redil_backend.Services.Teacher
             return ServiceResult<TeacherDto>.Ok(teacherDto);
         }
 
-        public async Task<ServiceResult<IEnumerable<TeacherListDto>>> GetTeachers(int page)
+        public async Task<ServiceResult<PaginatedResponse<TeacherListDto>>> GetTeachers(int page)
         {
             var teachers = await _authRepository.GetAllTeachers(page);
 
-            return ServiceResult<IEnumerable<TeacherListDto>>.Ok(teachers);
+            return ServiceResult<PaginatedResponse<TeacherListDto>>.Ok(teachers);
         }
 
         public async Task<ServiceResult<TeacherDto>> RegisterTeacher(RegisterTeacherDto registerTeacherDto)

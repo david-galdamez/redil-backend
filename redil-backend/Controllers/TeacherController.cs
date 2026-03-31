@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using redil_backend.Domain.Enums;
+using redil_backend.Dtos;
 using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Responses;
@@ -44,7 +45,7 @@ namespace redil_backend.Controllers
 
         [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<IEnumerable<TeacherListDto>>>> GetTeachers([FromQuery] int page)
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<TeacherListDto>>>> GetTeachers([FromQuery] int page)
         {
         
             if(page < 1)
@@ -54,7 +55,7 @@ namespace redil_backend.Controllers
 
             var teachers = await _teacherService.GetTeachers(page);
 
-            return Ok(new ApiResponse<IEnumerable<TeacherListDto>>
+            return Ok(new ApiResponse<PaginatedResponse<TeacherListDto>>
             {
                 Success = true,
                 Data = teachers.Data

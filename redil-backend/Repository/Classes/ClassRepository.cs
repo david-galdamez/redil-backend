@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using redil_backend.Dtos;
 using redil_backend.Dtos.Classes;
 using redil_backend.Models;
 
@@ -28,20 +29,39 @@ namespace redil_backend.Repository.Classes
         public async Task<Class?> GetById(int classId) =>
             await _context.Classes.FirstOrDefaultAsync(c => c.Id == classId);
 
-        public async Task<ICollection<ClassListDto>> GetClasses(int teacherId, int page)
+        public async Task<PaginatedResponse<ClassListDto>> GetClasses(int teacherId, int page)
         {
             var query = _context.Classes
-                .Where(c => c.TeacherId == teacherId).OrderByDescending(c => c.ClassDate);
+                .Where(c => c.TeacherId == teacherId)
+                .OrderByDescending(c => c.ClassDate);
 
             var pageSize = 10;
+
+            var totalRecords = await query.CountAsync();
+
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
             var recordsToSkip = (page - 1) * pageSize;
 
-            var paginatedClasses = await query.Skip(recordsToSkip)
+            var data = await query
+                .Skip(recordsToSkip)
                 .Take(pageSize)
-                .Select(c => new ClassListDto(c.Id, c.Redil.Name, c.ClassDescription, c.ClassDate))
+                .Select(c => new ClassListDto(
+                    c.Id,
+                    c.Redil.Name,
+                    c.ClassDescription,
+                    c.ClassDate
+                ))
                 .ToListAsync();
 
-            return paginatedClasses;
+            return new PaginatedResponse<ClassListDto>
+            {
+                Data = data,
+                TotalRecords = totalRecords,
+                PageSize = pageSize,
+                CurrentPage = page,
+                TotalPages = totalPages
+            };
         }
 
         public async Task Save() =>

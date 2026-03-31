@@ -40,7 +40,7 @@ namespace redil_backend.Mappers
 
         public static ClassDetailsDto ToClassDetailsDto(this Class classes)
         {
-            return new ClassDetailsDto(classes.Id, classes.ClassDescription, classes.ClassDate);
+            return new ClassDetailsDto(classes.Id, classes.ClassDescription, classes.ClassDate, classes.AttendanceToken, classes.AttendanceToken != null && classes.ExpiresAt <= DateTime.Now);
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using redil_backend.Domain.Enums;
+using redil_backend.Dtos;
+using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Teacher;
 using redil_backend.Models;
 
@@ -17,19 +19,37 @@ namespace redil_backend.Repository.Auth
         public async Task Add(User entity) =>
             await _context.Users.AddAsync(entity);
 
-        public async Task<IEnumerable<TeacherListDto>> GetAllTeachers(int page)
+        public async Task<PaginatedResponse<TeacherListDto>> GetAllTeachers(int page)
         {
-            var query = _context.Users.Where(t => t.RoleId == (int)UserRole.Maestro).OrderBy(t => t.Id);
+            var query = _context.Users
+                    .OrderByDescending(t => t.Id);
 
             var pageSize = 10;
+
+            var totalRecords = await query.CountAsync();
+
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
             var recordsToSkip = (page - 1) * pageSize;
 
-            var paginatedTeachers = await query.Skip(recordsToSkip)
+            var data = await query
+                .Skip(recordsToSkip)
                 .Take(pageSize)
-                .Select(t => new TeacherListDto(t.Id, t.Name, t.Redil == null ? "Sin Redil Asignado" : t.Redil.Name))
+                .Select(t => new TeacherListDto(
+                    t.Id,
+                    t.Name,
+                    t.Redil == null ? "Sin Redil Asignado" : t.Redil.Name
+                ))
                 .ToListAsync();
 
-            return paginatedTeachers;
+            return new PaginatedResponse<TeacherListDto>
+            {
+                Data = data,
+                TotalRecords = totalRecords,
+                PageSize = pageSize,
+                CurrentPage = page,
+                TotalPages = totalPages
+            };
         }
 
         public async Task<User> GetTeacher(int teacherId) =>

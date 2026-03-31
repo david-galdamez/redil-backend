@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using redil_backend.Domain.Enums;
+using redil_backend.Dtos;
 using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Responses;
 using redil_backend.Services;
@@ -11,7 +12,7 @@ using redil_backend.Services.Classes;
 
 namespace redil_backend.Controllers
 {
-    [Authorize(Roles = nameof(UserRole.Maestro))]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ClassController : ControllerBase
@@ -32,7 +33,7 @@ namespace redil_backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<ICollection<ClassListDto>>>> GetClasses([FromQuery]int page)
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<ClassListDto>>>> GetClasses([FromQuery]int page)
         {
             var teacherId = User.GetUserId();
 
@@ -44,14 +45,14 @@ namespace redil_backend.Controllers
             var classesResult = await _classService.GetClasses(teacherId, page);
             if(!classesResult.Success || classesResult.Data == null)
             {
-                return BadRequest(new ApiResponse<ICollection<ClassListDto>>
+                return BadRequest(new ApiResponse<PaginatedResponse<ClassListDto>>
                 {
                     Success = false,
                     Message = classesResult.ErrorMessage
                 });
             }
 
-            return Ok(new ApiResponse<ICollection<ClassListDto>>
+            return Ok(new ApiResponse<PaginatedResponse<ClassListDto>>
             {
                 Success = true,
                 Data = classesResult.Data
@@ -94,6 +95,44 @@ namespace redil_backend.Controllers
             {
                 Success = true,
                 Data = classResult.Data
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("assist/{attendanceToken}")]
+        public async Task<ActionResult<ApiResponse<AssistStatusDto>>> GetAssistStatus([FromRoute]string attendanceToken)
+        {
+            if(attendanceToken.IsNullOrEmpty())
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "El id de la clase es invalido."
+                });
+            }
+
+            var classExists = await _classService.ClassExists(attendanceToken);
+            if(!classExists)
+            {
+                return NotFound(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "La clase no existe."
+                });
+            }
+            var assistStatusResult = await _classService.GetAssistStatus(attendanceToken);
+            if(!assistStatusResult.Success || assistStatusResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<AssistStatusDto>
+                {
+                    Success = false,
+                    Message = assistStatusResult.ErrorMessage
+                });
+            }
+            return Ok(new ApiResponse<AssistStatusDto>
+            {
+                Success = true,
+                Data = assistStatusResult.Data
             });
         }
 

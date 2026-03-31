@@ -21,11 +21,16 @@ namespace redil_backend.Repository.Students
             await _context.Students.Where(s => 
             s.Email.Equals(email)).FirstOrDefaultAsync();
 
-        public async Task<Student?> GetStudentByEmail(string email, int redilId) =>
-            await _context.Students.Where(s => 
-            s.Email.Equals(email) && 
-            s.StudentRedils.Any(sr => 
-            sr.RedilId == redilId && sr.Active)).FirstOrDefaultAsync();
+        public async Task<Student?> GetStudentByEmail(string email, int redilId)
+        {
+            email = email.Trim().ToLower();
+
+            return await _context.StudentRediles
+                .Where(sr => sr.RedilId == redilId && sr.Active)
+                .Select(sr => sr.Student)
+                .Where(s => s.Email.ToLower().Equals(email))
+                .FirstOrDefaultAsync();
+        }
 
         public async Task<IEnumerable<StudentListDto>> GetStudentsByRedilId(int redilId)
         {
