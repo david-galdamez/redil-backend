@@ -42,6 +42,8 @@ builder.Services.AddScoped<IAuthService<ServiceResult<UserDto>,AuthRegisterDto, 
 builder.Services.AddScoped<IAuthRepository<User>, AuthRepository > ();
 builder.Services.AddScoped<IValidator<AuthRegisterDto>, AuthRegisterValidator>();
 builder.Services.AddScoped<IValidator<AuthLoginDto>, AuthLoginValidator>();
+builder.Services.AddScoped<IValidator<UserProfileUpdateDto>, AuthUpdateProfileValidator>();
+builder.Services.AddScoped<IValidator<UserPasswordChangeDto>, AuthUpdatePasswordValidator>();
 
 // Redil
 builder.Services.AddScoped<IRedilRepository<Redile>, RedilRepository>();

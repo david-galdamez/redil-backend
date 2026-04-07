@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using redil_backend.Dtos;
 using redil_backend.Models;
 
 namespace redil_backend.Repository.ClassDetails
@@ -18,8 +19,11 @@ namespace redil_backend.Repository.ClassDetails
         public async Task<ClassDetail?> GetClassDetail(int classId, int studentId) =>
             await _context.ClassDetails.FirstOrDefaultAsync(cd => cd.StudentId == studentId && cd.ClassId == classId);
 
-        public async Task<ICollection<ClassDetail>> GetClassDetailsForStats(int? redilId, DateTime fromDate, DateTime toDate, int? groupId)
+        public async Task<ICollection<ClassDetail>> GetClassDetailsForStats(int? redilId, DateTime fromDate, DateTime toDate, int? groupId, string? search)
         {
+            fromDate = DateTime.SpecifyKind(fromDate, DateTimeKind.Utc);
+            toDate = DateTime.SpecifyKind(toDate, DateTimeKind.Utc);
+
             var query = _context.ClassDetails
                     .Include(cd => cd.Class).ThenInclude(c => c.Redil)
                     .Include(cd => cd.Student).ThenInclude(s => s.Group)
@@ -39,7 +43,23 @@ namespace redil_backend.Repository.ClassDetails
                 query = query.Where(cd => cd.Student.GroupId == groupId.Value);
             }
 
-            return await query.ToListAsync();
+            if(search != null)
+            {
+                query = query.Where(cd => cd.Student.Name.Contains(search));
+            }
+
+            return await query.OrderBy(cd => cd.Class.ClassDate).ToListAsync();
+        }
+
+        public async Task<int> GetTotalClassesCount(int? redilId, DateTime fromDate, DateTime toDate)
+        {
+            var query = _context.Classes
+                .Where(c => c.ClassDate >= fromDate && c.ClassDate <= toDate);
+
+            if (redilId.HasValue)
+                query = query.Where(c => c.RedilId == redilId.Value);
+
+            return await query.Select(c => c.ClassDate.Date).Distinct().CountAsync();
         }
 
         public async Task Save() =>

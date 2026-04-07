@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using redil_backend.Domain.Enums;
+using redil_backend.Dtos;
 using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Responses;
@@ -114,7 +115,7 @@ namespace redil_backend.Controllers
             });
         }
 
-        [Authorize(Roles = nameof(UserRole.Admin))]
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<RedilDetailsDto>> GetRedilById([FromRoute]int id)
         {
@@ -145,13 +146,18 @@ namespace redil_backend.Controllers
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
-        [HttpGet("stats")]
-        public async Task<ActionResult<ApiResponse<RedilClassStatDto>>> GetRedilStats([FromBody]ClassStatsRequestDto classStatsRequest)
+        [HttpPost("stats")]
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<RedilClassStatDto>>>> GetRedilStats([FromQuery]int page, [FromBody]ClassStatsRequestDto classStatsRequest)
         {
+            if(page < 1)
+            {
+                page = 1;
+            }
+
             var validationResult = await _classStatsRequestValidator.ValidateAsync(classStatsRequest);
             if(!validationResult.IsValid)
             {
-                return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                return BadRequest(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
                 {
                     Success = false,
                     Message = "Errores de validacion.",
@@ -168,7 +174,7 @@ namespace redil_backend.Controllers
                 var validGroup = await _groupService.ValidateGroup(classStatsRequest.GroupId.Value);
                 if (!validGroup.Success || !validGroup.Data)
                 {
-                    return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                    return BadRequest(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
                     {
                         Success = false,
                         Message = "Id del grupo no existe."
@@ -181,7 +187,7 @@ namespace redil_backend.Controllers
                 var validRedil = await _redilService.RedilExists(classStatsRequest.RedilId.Value);
                 if (!validRedil)
                 {
-                    return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                    return BadRequest(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
                     {
                         Success = false,
                         Message = "Id del grupo no existe."
@@ -189,17 +195,17 @@ namespace redil_backend.Controllers
                 }
             }
 
-            var classStats = await _classService.GetRedilStats(classStatsRequest.RedilId, classStatsRequest);
+            var classStats = await _classService.GetRedilStats(classStatsRequest.RedilId, classStatsRequest, page);
             if (!classStats.Success || classStats.Data == null)
             {
-                return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                return BadRequest(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
                 {
                     Success = false,
                     Message = classStats.ErrorMessage
                 });
             }
 
-            return Ok(new ApiResponse<ICollection<RedilClassStatDto>>
+            return Ok(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
             {
                 Success = true,
                 Data = classStats.Data

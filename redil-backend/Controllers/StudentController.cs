@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using redil_backend.Dtos;
 using redil_backend.Dtos.Responses;
 using redil_backend.Dtos.Student;
 using redil_backend.Services;
@@ -26,28 +27,38 @@ namespace redil_backend.Controllers
 
         [Authorize]
         [HttpGet("redil/{id}")]
-        public async Task<ActionResult<ApiResponse<IEnumerable<StudentListDto>>>> GetStudentsByRedil([FromRoute]int id)
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<StudentListDto>>>> GetStudentsByRedil([FromRoute]int id, [FromQuery]int page, [FromQuery]string? search)
         {
             if(id == 0)
             {
-                return BadRequest(new ApiResponse<IEnumerable<StudentListDto>>
+                return BadRequest(new ApiResponse<PaginatedResponse<StudentListDto>>
                 {
                     Success = false,
                     Message = "Id no proporcionado."
                 });
             }
 
-            var studentResult = await _studentService.GetStudentByRedil(id);
+            if(page < 1)
+            {
+                page = 1;
+            }
+
+            if(search == null)
+            {
+                search = string.Empty;
+            }
+
+            var studentResult = await _studentService.GetStudentByRedil(id, page, search);
             if(!studentResult.Success || studentResult.Data == null)
             {
-                return BadRequest(new ApiResponse<IEnumerable<StudentListDto>>
+                return BadRequest(new ApiResponse<PaginatedResponse<StudentListDto>>
                 {
                     Success = false,
                     Message = studentResult.ErrorMessage
                 });
             }
 
-            return Ok(new ApiResponse<IEnumerable<StudentListDto>>
+            return Ok(new ApiResponse<PaginatedResponse<StudentListDto>>
             {
                 Success = true,
                 Data = studentResult.Data

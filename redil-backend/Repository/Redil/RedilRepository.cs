@@ -26,8 +26,8 @@ namespace redil_backend.Repository.Redil
                 .Include(r => r.Users)
                 .Where(r => r.Id == id)
                 .Select(r => new RedilDetailsDto(
-                    r.Id, r.Name, r.Description ?? "",
-                    r.Users
+                    r.Id, r.Name, r.Description ?? "", r.Code,
+                    r.Users.Where(u => u.IsActive)
                             .Select(u => new RedilTeacherList(u.Id, u.Name, u.Email)
                 )))
                 .FirstOrDefaultAsync();

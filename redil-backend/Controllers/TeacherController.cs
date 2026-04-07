@@ -45,7 +45,7 @@ namespace redil_backend.Controllers
 
         [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<PaginatedResponse<TeacherListDto>>>> GetTeachers([FromQuery] int page)
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<TeacherListDto>>>> GetTeachers([FromQuery]int page, [FromQuery]string? search)
         {
         
             if(page < 1)
@@ -53,8 +53,12 @@ namespace redil_backend.Controllers
                 page = 1;
             }
 
-            var teachers = await _teacherService.GetTeachers(page);
+            if(search == null)
+            {
+                search = string.Empty;
+            }
 
+            var teachers = await _teacherService.GetTeachers(page, search);
             return Ok(new ApiResponse<PaginatedResponse<TeacherListDto>>
             {
                 Success = true,
@@ -94,14 +98,19 @@ namespace redil_backend.Controllers
             });
         }
 
-        [Authorize(Roles = nameof(UserRole.Maestro))]
-        [HttpGet("redil/stats")]
-        public async Task<ActionResult<ApiResponse<ICollection<RedilClassStatDto>>>> GetClassStats([FromBody]ClassStatsRequestDto classStatsRequest)
+        [Authorize]
+        [HttpPost("redil/stats")]
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<RedilClassStatDto>>>> GetClassStats([FromQuery]int page, [FromBody]ClassStatsRequestDto classStatsRequest)
         { 
+            if(page < 1)
+            {
+                page = 1;
+            }
+
             var validationResult = await _classStatsRequestValidator.ValidateAsync(classStatsRequest);
             if(!validationResult.IsValid)
             {
-                return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                return BadRequest(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
                 {
                     Success = false,
                     Message = "Errores de validacion.",
@@ -116,7 +125,7 @@ namespace redil_backend.Controllers
             var redilId = User.GetRedilId();
             if(!redilId.HasValue)
             {
-                return Unauthorized(new ApiResponse<ICollection<RedilClassStatDto>>
+                return Unauthorized(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
                 {
                     Success = false,
                     Message = "No tienes permiso para ver las estadisticas de la clase."
@@ -128,7 +137,7 @@ namespace redil_backend.Controllers
                 var validGroup = await _groupService.ValidateGroup(classStatsRequest.GroupId.Value);
                 if(!validGroup.Success || !validGroup.Data)
                 {
-                    return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                    return BadRequest(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
                     {
                         Success = false,
                         Message = "Id del grupo no existe."
@@ -136,17 +145,17 @@ namespace redil_backend.Controllers
                 }
             }
 
-            var classStats = await _classService.GetRedilStats(redilId.Value, classStatsRequest);
+            var classStats = await _classService.GetRedilStats(redilId.Value, classStatsRequest, page);
             if(!classStats.Success || classStats.Data == null)
             {
-                return BadRequest(new ApiResponse<ICollection<RedilClassStatDto>>
+                return BadRequest(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
                 {
                     Success = false,
                     Message = classStats.ErrorMessage
                 });
             }
 
-            return Ok(new ApiResponse<ICollection<RedilClassStatDto>>
+            return Ok(new ApiResponse<PaginatedResponse<RedilClassStatDto>>
             {
                 Success = true,
                 Data = classStats.Data

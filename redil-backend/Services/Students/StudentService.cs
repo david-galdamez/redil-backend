@@ -1,4 +1,5 @@
-﻿using redil_backend.Dtos.Student;
+﻿using redil_backend.Dtos;
+using redil_backend.Dtos.Student;
 using redil_backend.Mappers;
 using redil_backend.Models;
 using redil_backend.Repository.Groups;
@@ -27,17 +28,17 @@ namespace redil_backend.Services.Students
             _redilRepository = redilRepository;
         }
 
-        public async Task<ServiceResult<IEnumerable<StudentListDto>>> GetStudentByRedil(int id)
+        public async Task<ServiceResult<PaginatedResponse<StudentListDto>>> GetStudentByRedil(int id, int page, string search)
         {
             var redilExists = await _redilRepository.DoesRedilExists(id);
             if(!redilExists)
             {
-                return ServiceResult<IEnumerable<StudentListDto>>.Fail("El redil no existe.");
+                return ServiceResult<PaginatedResponse<StudentListDto>>.Fail("El redil no existe.");
             }
 
-            var students = await _studentsRepository.GetStudentsByRedilId(id);
+            var students = await _studentsRepository.GetStudentsByRedilId(id, page, search);
 
-            return ServiceResult<IEnumerable<StudentListDto>>.Ok(students);
+            return ServiceResult<PaginatedResponse<StudentListDto>>.Ok(students);
         }
 
         public async Task<ServiceResult<int>> RegisterStudent(RegisterStudentDto registerStudentDto, string code)

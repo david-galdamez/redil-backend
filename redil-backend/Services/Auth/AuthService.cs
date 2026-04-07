@@ -7,7 +7,7 @@ using redil_backend.Repository.Auth;
 
 namespace redil_backend.Services.Auth
 {
-    public class AuthService : IAuthService<ServiceResult<UserDto>,AuthRegisterDto, AuthLoginDto>
+    public class AuthService : IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto>
     {
         private IAuthRepository<User> _authRepository;
         private IPasswordHasher<User> _passwordHasher;
@@ -44,6 +44,11 @@ namespace redil_backend.Services.Auth
                 return ServiceResult<AuthLoginResult>.Fail("Correo invalido o no existe.");
             }
 
+            if(!user.IsActive)
+            {
+                return ServiceResult<AuthLoginResult>.Fail("Usuario inactivo. Contacta al administrador.");
+            }
+
             var result = _passwordHasher.VerifyHashedPassword(user, user.Password, authLoginDto.Password); 
             if(result == PasswordVerificationResult.Failed)
             {
@@ -77,6 +82,55 @@ namespace redil_backend.Services.Auth
             var logedUserDto = user.ToLogedUserDto();
 
             return ServiceResult<LogedUserDto>.Ok(logedUserDto);
+        }
+
+        public async Task<ServiceResult<UserDetailsDto>> GetUserDetailsById(int id)
+        {
+            var userDetails = await _authRepository.GetUserDetailsById(id);
+            if (userDetails == null)
+            {
+                return ServiceResult<UserDetailsDto>.Fail("Usuario no encontrado.");
+            }
+
+            return ServiceResult<UserDetailsDto>.Ok(userDetails);
+        }
+
+        public async Task<ServiceResult<UserDto>> UpdateUserDetails(int id, UserProfileUpdateDto userProfileDto)
+        {
+            var user = await _authRepository.GetUserById(id);
+            if(user == null)
+            {
+                return ServiceResult<UserDto>.Fail("Usuario no encontrado.");
+            }
+
+            user.Name = userProfileDto.Name;
+
+            await _authRepository.Update(user);
+            await _authRepository.Save();
+
+            return ServiceResult<UserDto>.Ok(user.ToUserDto());
+        }
+
+        public async Task<ServiceResult<UserDto>> ChangePassword(int id, UserPasswordChangeDto userPasswordChangeDto)
+        {
+            var user = await _authRepository.GetUserById(id);
+            if (user == null)
+            {
+                return ServiceResult<UserDto>.Fail("Usuario no encontrado.");
+            }
+
+            var validPassword = _passwordHasher.VerifyHashedPassword(user, user.Password, userPasswordChangeDto.CurrentPassword);
+            if(validPassword == PasswordVerificationResult.Failed)
+            {
+                return ServiceResult<UserDto>.Fail("Contraseña actual incorrecta.");
+            }
+
+            user.Password = _passwordHasher.HashPassword(user, userPasswordChangeDto.NewPassword);
+
+            await _authRepository.Update(user);
+            await _authRepository.Save();
+
+            return ServiceResult<UserDto>.Ok(user.ToUserDto());
         }
     }
 }

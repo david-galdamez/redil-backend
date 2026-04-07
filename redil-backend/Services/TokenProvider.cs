@@ -31,7 +31,7 @@ namespace redil_backend.Services
                 new Claim("role", user.Role.ToString()),
             };
 
-            if(user.RedilId.HasValue && user.Role == UserRole.Maestro)
+            if(user.RedilId.HasValue)
             {
                 claims.Add(new Claim("redil_id", user.RedilId.Value.ToString()));
             }

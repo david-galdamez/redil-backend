@@ -88,31 +88,50 @@ namespace redil_backend.Services.Classes
             return ServiceResult<PaginatedResponse<ClassListDto>>.Ok(classes);
         }
 
-        public async Task<ServiceResult<ICollection<RedilClassStatDto>>> GetRedilStats(int? redilId, ClassStatsRequestDto classStatsRequest)
+        public async Task<ServiceResult<PaginatedResponse<RedilClassStatDto>>> GetRedilStats(
+            int? redilId, ClassStatsRequestDto classStatsRequest, int page)
         {
-            var details = await _classDetailsRepository.GetClassDetailsForStats(redilId, classStatsRequest.FromDate, classStatsRequest.ToDate, classStatsRequest.GroupId);
+            var details = await _classDetailsRepository.GetClassDetailsForStats(
+                redilId, classStatsRequest.FromDate, classStatsRequest.ToDate, classStatsRequest.GroupId, classStatsRequest.Search
+            );
+
             if (!details.Any())
-            {
-                return ServiceResult<ICollection<RedilClassStatDto>>.Ok(new List<RedilClassStatDto>());
-            }
+                return ServiceResult<PaginatedResponse<RedilClassStatDto>>.Ok(new PaginatedResponse<RedilClassStatDto>());
 
             var totalClasses = details.Select(d => d.Class.ClassDate.Date).Distinct().Count();
 
-            var stats = details.GroupBy(d => new
-            {
-                d.Student,
-                d.Class.Redil.Name
-            })
+            var allStats = details
+                .GroupBy(d => new { d.Student, d.Class.Redil.Name })
                 .Select(g =>
                 {
                     var attended = g.Count(d => d.Attendance);
-
-                    var porcentage = totalClasses == 0 ? 0 : (float)attended / totalClasses * 100;
-
-                    return new RedilClassStatDto(g.Key.Student.Name, g.Key.Student.Group.Name, g.Key.Name, g.Key.Student.IsServer, porcentage);
+                    var percentage = totalClasses == 0 ? 0 : (float)attended / totalClasses * 100;
+                    return new RedilClassStatDto(
+                        g.Key.Student.Name,
+                        g.Key.Student.Group.Name,
+                        g.Key.Name,
+                        g.Key.Student.IsServer,
+                        percentage
+                    );
                 }).ToList();
 
-            return ServiceResult<ICollection<RedilClassStatDto>>.Ok(stats);
+            // Paginación sobre los stats agrupados
+            var pageSize = 10;
+            var totalRecords = allStats.Count;
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            var pagedStats = allStats
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return ServiceResult<PaginatedResponse<RedilClassStatDto>>.Ok(new PaginatedResponse<RedilClassStatDto>
+            {
+                Data = pagedStats,
+                TotalRecords = totalRecords,
+                PageSize = pageSize,
+                CurrentPage = page,
+                TotalPages = totalPages
+            });
         }
 
         public async Task<ServiceResult<string>> PassAssist(int classId)
