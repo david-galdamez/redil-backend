@@ -98,20 +98,22 @@ namespace redil_backend.Services.Classes
             if (!details.Any())
                 return ServiceResult<PaginatedResponse<RedilClassStatDto>>.Ok(new PaginatedResponse<RedilClassStatDto>());
 
-            var totalClasses = details.Select(d => d.Class.ClassDate.Date).Distinct().Count();
-
             var allStats = details
-                .GroupBy(d => new { d.Student, d.Class.Redil.Name })
+                .GroupBy(d => new { d.Student, RedilName = d.Class.Redil.Name })
                 .Select(g =>
                 {
+                    var totalClassesForStudent = g.Select(d => d.Class.ClassDate.Date).Distinct().Count();
                     var attended = g.Count(d => d.Attendance);
-                    var percentage = totalClasses == 0 ? 0 : (float)attended / totalClasses * 100;
+                    var percentage = totalClassesForStudent == 0
+                        ? 0
+                        : (float)attended / totalClassesForStudent * 100;
+
                     return new RedilClassStatDto(
                         g.Key.Student.Name,
-                        g.Key.Student.Group.Name,
-                        g.Key.Name,
+                        g.Key.Student.Group?.Name ?? "-",
+                        g.Key.RedilName,
                         g.Key.Student.IsServer,
-                        percentage
+                        MathF.Round(percentage, 1)
                     );
                 }).ToList();
 
@@ -175,7 +177,7 @@ namespace redil_backend.Services.Classes
             var validAssist = await ValidateAssistToken(attendanceToken);
             if(!validAssist)
             {
-                return ServiceResult<ClassDto>.Fail("Token de asistencia inválido o expirado.");
+                return ServiceResult<ClassDto>.Fail("Token de asistencia expirado.");
             }
 
             var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
@@ -231,6 +233,17 @@ namespace redil_backend.Services.Classes
 
             var classDto = classModel.ToClassDto();
             return ServiceResult<ClassDto>.Ok(classDto);
+        }
+
+        public async Task<bool> AssistTokenExists(string attendanceToken)
+        {
+            var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
+            if(classModel == null)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public async Task<bool> ValidateAssistToken(string attendanceToken)

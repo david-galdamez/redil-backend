@@ -188,6 +188,16 @@ namespace redil_backend.Controllers
                     Message = "El token de la clase es invalido."
                 });
             }
+            
+            var assistTokenExists = await _classService.AssistTokenExists(attendanceToken);
+            if(!assistTokenExists)
+            {
+                return NotFound(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "El token de asistencia no existe."
+                });
+            }
 
             var classExists = await _classService.ClassExists(attendanceToken);
             if(!classExists)
@@ -217,6 +227,16 @@ namespace redil_backend.Controllers
             var registerResult = await _classService.RegisterAssist(attendanceToken, registerAssistDto);
             if(!registerResult.Success || registerResult.Data == null)
             {
+
+                if(registerResult.ErrorMessage != null && registerResult.ErrorMessage.Contains("expirado"))
+                {
+                    return Conflict(new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = registerResult.ErrorMessage
+                    });
+                }
+
                 return BadRequest(new ApiResponse<string>
                 {
                     Success = false,
