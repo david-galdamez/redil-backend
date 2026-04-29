@@ -39,7 +39,7 @@ namespace redil_backend.Repository.Students
         public async Task<PaginatedResponse<StudentListDto>> GetStudentsByRedilId(int redilId, int page, string search)
         {
             var query = _context.StudentRediles
-                    .Where(sr => sr.RedilId == redilId);
+                    .Where(sr => sr.RedilId == redilId && sr.Active);
 
             if(!search.IsNullOrEmpty())
             {

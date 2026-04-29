@@ -21,16 +21,26 @@ namespace redil_backend.Repository.ClassDetails
 
         public async Task<ICollection<ClassDetail>> GetClassDetailsForStats(int? redilId, DateTime fromDate, DateTime toDate, int? groupId, string? search)
         {
-            fromDate = DateTime.SpecifyKind(fromDate, DateTimeKind.Utc);
-            toDate = DateTime.SpecifyKind(toDate, DateTimeKind.Utc);
+
+            var salvadorTz = TimeZoneInfo.FindSystemTimeZoneById("America/El_Salvador");
+
+            var fromUtc = TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(fromDate.Date, DateTimeKind.Unspecified), salvadorTz);
+
+            var toUtc = TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(toDate.Date.AddDays(1).AddTicks(-1), DateTimeKind.Unspecified), salvadorTz);
 
             var query = _context.ClassDetails
                     .Include(cd => cd.Class).ThenInclude(c => c.Redil)
                     .Include(cd => cd.Student).ThenInclude(s => s.Group)
                     .Where(cd =>
-                        cd.Class.ClassDate >= fromDate &&
-                        cd.Class.ClassDate <= toDate &&
-                        cd.Student.StudentRedils.Any(sr => sr.Active)
+                        cd.Class.ClassDate >= fromUtc &&
+                        cd.Class.ClassDate <= toUtc &&
+                        cd.Student.StudentRedils.Any(sr => 
+                            sr.Active &&
+                            sr.RedilId == cd.Class.RedilId &&
+                            cd.Class.ClassDate >= sr.JoinedAt
+                        )
                     );
 
             if (redilId.HasValue)
