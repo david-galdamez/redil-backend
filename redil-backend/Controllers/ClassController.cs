@@ -292,6 +292,7 @@ namespace redil_backend.Controllers
             return Ok(new ApiResponse<ClassDto>
             {
                 Success = true,
+                Data = registerResult.Data,
                 Message = "Clase creada con exito."
             });
         }

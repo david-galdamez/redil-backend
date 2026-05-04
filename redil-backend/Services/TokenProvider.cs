@@ -28,6 +28,7 @@ namespace redil_backend.Services
             {
                 new Claim("id", user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim("name", user.Name),
                 new Claim("role", user.Role.ToString()),
             };
 
