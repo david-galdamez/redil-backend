@@ -122,7 +122,7 @@ namespace redil_backend.Controllers
             var validRedil = await _redilService.RedilExists(id);
             if (!validRedil)
             {
-                return BadRequest(new ApiResponse<RedilDetailsDto>
+                return NotFound(new ApiResponse<RedilDetailsDto>
                 {
                     Success = false,
                     Message = "Id del redil no existe."
@@ -131,6 +131,14 @@ namespace redil_backend.Controllers
             var redilResult = await _redilService.GetRedilById(id);
             if (!redilResult.Success || redilResult.Data == null)
             {
+                if(redilResult.ErrorMessage != null && redilResult.ErrorMessage.Contains("no encontrado"))
+                {
+                    return NotFound(new ApiResponse<RedilDetailsDto>
+                    {
+                        Success = false,
+                        Message = redilResult.ErrorMessage
+                    });
+                }
                 return BadRequest(new ApiResponse<RedilDetailsDto>
                 {
                     Success = false,

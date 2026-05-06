@@ -7,7 +7,7 @@ namespace redil_backend.Services.Classes
     public interface IClassService<T, Tr>
     {
         Task<T> RegisterClass(Tr registerClassDto, int redilId, int teacherId);
-        Task<ServiceResult<PaginatedResponse<ClassListDto>>> GetClasses(int teacherId, int page);
+        Task<ServiceResult<PaginatedResponse<ClassListDto>>> GetClasses(int redilId, int page);
         Task<bool> ClassExists(int classId);
         Task<bool> ClassExists(string attendanceToken);
         Task<ServiceResult<AssistStatusDto>> GetAssistStatus(string attendanceToken);

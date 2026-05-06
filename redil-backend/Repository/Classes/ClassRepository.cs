@@ -29,10 +29,10 @@ namespace redil_backend.Repository.Classes
         public async Task<Class?> GetById(int classId) =>
             await _context.Classes.FirstOrDefaultAsync(c => c.Id == classId);
 
-        public async Task<PaginatedResponse<ClassListDto>> GetClasses(int teacherId, int page)
+        public async Task<PaginatedResponse<ClassListDto>> GetClasses(int redilId, int page)
         {
             var query = _context.Classes
-                .Where(c => c.TeacherId == teacherId)
+                .Where(c => c.RedilId == redilId)
                 .OrderByDescending(c => c.ClassDate);
 
             var pageSize = 10;

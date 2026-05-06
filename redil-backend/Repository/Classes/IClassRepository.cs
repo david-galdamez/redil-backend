@@ -5,7 +5,7 @@ namespace redil_backend.Repository.Classes
 {
     public interface IClassRepository<T>
     {
-        Task<PaginatedResponse<ClassListDto>> GetClasses(int teacherId, int page);
+        Task<PaginatedResponse<ClassListDto>> GetClasses(int redilId, int page);
         Task<bool> Exists(int classId);
         Task<bool> Exists(string attendanceToken);
         Task Add(T classes);
