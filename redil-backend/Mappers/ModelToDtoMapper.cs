@@ -35,7 +35,7 @@ namespace redil_backend.Mappers
 
         public static ClassDto ToClassDto(this Class classes)
         {
-            return new ClassDto(classes.RedilId, classes.TeacherId, classes.ClassDate, classes.ClassDescription);
+            return new ClassDto(classes.Id, classes.RedilId, classes.TeacherId, classes.ClassDate, classes.ClassDescription);
         }
 
         public static ClassDetailsDto ToClassDetailsDto(this Class classes)

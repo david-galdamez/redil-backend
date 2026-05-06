@@ -65,7 +65,9 @@ namespace redil_backend.Services.Classes
                 return ServiceResult<AssistStatusDto>.Fail("Redil no encontrado.");
             }
 
-            var assistStatus = new AssistStatusDto(redil.Name, classModel.ClassDescription, classModel.ClassDate);
+            var emails = await _classDetailsRepository.GetEmailsByClassId(classModel.Id);
+
+            var assistStatus = new AssistStatusDto(redil.Name, classModel.ClassDescription, classModel.ClassDate, emails);
             return ServiceResult<AssistStatusDto>.Ok(assistStatus);
         }
 
@@ -81,9 +83,9 @@ namespace redil_backend.Services.Classes
             return ServiceResult<ClassDetailsDto>.Ok(classDetail.ToClassDetailsDto());
         }
 
-        public async Task<ServiceResult<PaginatedResponse<ClassListDto>>> GetClasses(int teacherId, int page)
+        public async Task<ServiceResult<PaginatedResponse<ClassListDto>>> GetClasses(int redilId, int page)
         {
-            var classes = await _classRepository.GetClasses(teacherId, page);
+            var classes = await _classRepository.GetClasses(redilId, page);
 
             return ServiceResult<PaginatedResponse<ClassListDto>>.Ok(classes);
         }

@@ -61,6 +61,12 @@ namespace redil_backend.Repository.ClassDetails
             return await query.OrderBy(cd => cd.Class.ClassDate).ToListAsync();
         }
 
+        public async Task<IEnumerable<string>> GetEmailsByClassId(int classId) =>
+            await _context.ClassDetails.Where(cd => cd.ClassId == classId)
+                .Include(cd => cd.Student)
+                .Select(cd => cd.Student.Email)
+                .ToListAsync();
+
         public async Task<int> GetTotalClassesCount(int? redilId, DateTime fromDate, DateTime toDate)
         {
             var query = _context.Classes

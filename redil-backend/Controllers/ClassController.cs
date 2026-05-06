@@ -35,14 +35,22 @@ namespace redil_backend.Controllers
         [HttpGet]
         public async Task<ActionResult<ApiResponse<PaginatedResponse<ClassListDto>>>> GetClasses([FromQuery]int page)
         {
-            var teacherId = User.GetUserId();
+            var redilId = User.GetRedilId();
+            if(redilId == null)
+            {
+                return Unauthorized(new ApiResponse<PaginatedResponse<ClassListDto>>
+                {
+                    Success = false,
+                    Message = "No tienes permiso para ver las clases."
+                });
+            }
 
             if(page < 1)
             {
                 page = 1;
             }
 
-            var classesResult = await _classService.GetClasses(teacherId, page);
+            var classesResult = await _classService.GetClasses(redilId.Value, page);
             if(!classesResult.Success || classesResult.Data == null)
             {
                 return BadRequest(new ApiResponse<PaginatedResponse<ClassListDto>>
@@ -292,6 +300,7 @@ namespace redil_backend.Controllers
             return Ok(new ApiResponse<ClassDto>
             {
                 Success = true,
+                Data = registerResult.Data,
                 Message = "Clase creada con exito."
             });
         }
