@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
 using redil_backend.Dtos.Responses;
+using redil_backend.Middlewares;
 using redil_backend.Services;
 using redil_backend.Services.Auth;
 using redil_backend.Validators.Auth;
@@ -80,7 +81,7 @@ namespace redil_backend.Controllers
             });
         }
 
-        [Authorize(Roles = nameof(UserRole.Admin))]
+        [ApiKey]
         [HttpPost("register_admin")]
         public async Task<ActionResult<ApiResponse<UserDto>>> Register([FromBody]AuthRegisterDto authRegisterDto)
         {
