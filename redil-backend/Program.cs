@@ -38,8 +38,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Auth
-builder.Services.AddScoped<IAuthService<ServiceResult<UserDto>,AuthRegisterDto, AuthLoginDto>, AuthService>();
-builder.Services.AddScoped<IAuthRepository<User>, AuthRepository > ();
+builder.Services.AddScoped<IAuthService<ServiceResult<UserDto>, AuthRegisterDto, AuthLoginDto>, AuthService>();
+builder.Services.AddScoped<IAuthRepository<User>, AuthRepository>();
 builder.Services.AddScoped<IValidator<AuthRegisterDto>, AuthRegisterValidator>();
 builder.Services.AddScoped<IValidator<AuthLoginDto>, AuthLoginValidator>();
 builder.Services.AddScoped<IValidator<UserProfileUpdateDto>, AuthUpdateProfileValidator>();
@@ -129,7 +129,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4321", "https://redil-frontend.vercel.app")
+        policy.WithOrigins("http://localhost:4321", "https://redil-frontend.vercel.app", "https://comu-redil-api-development.up.railway.app/")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
