@@ -205,7 +205,7 @@ namespace redil_backend.Services.Classes
                 return ServiceResult<ClassDto>.Fail("Asistencia ya registrada para este estudiante.");
             }
 
-            classDetail.Attendance = true;
+            classDetail.Attendance = registerAttendanceDto.Attended;
 
             await _classDetailsRepository.Update(classDetail);
             await _classDetailsRepository.Save();
