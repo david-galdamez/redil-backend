@@ -86,7 +86,7 @@ builder.Services.AddDbContext<RedilDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"));
 });
 
-builder.Services.AddControllers(o => 
+builder.Services.AddControllers(o =>
     o.Filters.Add<ApiKeyFilter>());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -129,7 +129,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4321", "https://redil-frontend.vercel.app", "https://comu-redil-api-development.up.railway.app/")
+        policy.WithOrigins(
+            "http://localhost:4321",
+            "https://redil-frontend.vercel.app", 
+            "https://comu-redil-api-development.up.railway.app/", 
+            "https://redil-dev.comu-app.com/", 
+            "https://redil.comu-app.com/")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
