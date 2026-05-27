@@ -132,9 +132,9 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:4321",
             "https://redil-frontend.vercel.app", 
-            "https://comu-redil-api-development.up.railway.app/", 
-            "https://redil-dev.comu-app.com/", 
-            "https://redil.comu-app.com/")
+            "https://comu-redil-api-development.up.railway.app", 
+            "https://redil-dev.comu-app.com", 
+            "https://redil.comu-app.com")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
