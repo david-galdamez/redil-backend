@@ -70,7 +70,7 @@ namespace redil_backend.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddHours(2)
             });
 
@@ -247,7 +247,12 @@ namespace redil_backend.Controllers
         [HttpPost("logout")]
         public async Task<ActionResult<ApiResponse<UserDto>>> Logout()
         {
-            Response.Cookies.Delete("access_token");
+            Response.Cookies.Delete("access_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
 
             return Ok(new ApiResponse<UserDto>
             {
