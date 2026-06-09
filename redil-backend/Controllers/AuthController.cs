@@ -39,12 +39,12 @@ namespace redil_backend.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResponse<UserDto>>> Login([FromBody]AuthLoginDto authLoginDto)
+        public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login([FromBody]AuthLoginDto authLoginDto)
         {
             var validationResult = await _loginValidator.ValidateAsync(authLoginDto);
             if (!validationResult.IsValid)
             {
-                return BadRequest(new ApiResponse<UserDto>
+                return BadRequest(new ApiResponse<LoginResponseDto>
                 {
                     Success = false,
                     Message = "Errores de validación.",
@@ -59,24 +59,17 @@ namespace redil_backend.Controllers
             var loginResult = await _authService.Login(authLoginDto);
             if (!loginResult.Success || loginResult.Data == null)
             {
-                return Unauthorized(new ApiResponse<UserDto>
+                return Unauthorized(new ApiResponse<LoginResponseDto>
                 {
                     Success = false,
                     Message = loginResult.ErrorMessage
                 });
             }
 
-            HttpContext.Response.Cookies.Append("access_token", loginResult.Data.accessToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = DateTimeOffset.UtcNow.AddHours(2)
-            });
-
-            return Ok(new ApiResponse<UserDto>
+            return Ok(new ApiResponse<LoginResponseDto>
             {
                 Success = true,
+                Data = new LoginResponseDto(loginResult.Data.accessToken),
                 Message = "Login exitoso.",
             });
         }
