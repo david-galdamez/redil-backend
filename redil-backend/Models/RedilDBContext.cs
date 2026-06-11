@@ -28,6 +28,9 @@ namespace redil_backend.Models
                 .HasIndex(r => r.Code)
                 .IsUnique();
 
+            modelBuilder.Entity<Redile>()
+                .HasIndex(r => r.Name);
+
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
@@ -44,6 +47,9 @@ namespace redil_backend.Models
                 .HasIndex(sr => new { sr.StudentId, sr.RedilId })
                 .IsUnique();
 
+            modelBuilder.Entity<StudentRedil>()
+                .HasIndex(sr => new { sr.RedilId, sr.JoinedAt });
+
             modelBuilder.Entity<ClassDetail>()
                 .HasIndex(cd => new { cd.ClassId, cd.StudentId })
                 .IsUnique();
@@ -51,6 +57,10 @@ namespace redil_backend.Models
             modelBuilder.Entity<Class>()
                 .HasIndex(c => c.AttendanceToken)
                 .IsUnique();
+
+            modelBuilder.Entity<Class>()
+                .HasIndex(c => new { c.RedilId, c.ClassDate })
+                .IsDescending(false, true);
 
             modelBuilder.Entity<Class>()
                 .Property(c => c.ClassDate)
