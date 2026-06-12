@@ -10,6 +10,7 @@ namespace redil_backend.Services.Teacher
         Task<T> GetTeacher(int id);
         Task<bool> TeacherExists(string email);
         Task<bool> TeacherExists(int id);
-        Task<ServiceResult<PaginatedResponse<TeacherListDto>>> GetTeachers(int page, string search);
+        Task<ServiceResult<PaginatedResponse<TeacherListDto>>> GetTeachers(int page, string search, int? redilId = null, int? roleId = null);
+        Task<ServiceResult<TeacherDto>> ChangeTeacherPassword(int teacherId, string newPassword);
     }
 }

@@ -15,8 +15,11 @@ namespace redil_backend.Validators.Teacher
                 .NotEmpty().WithMessage("El correo electrónico no puede estar vacío.")
                 .EmailAddress().WithMessage("El correo electrónico no es válido.");
 
-            RuleFor(x => x.RedilId)
-                .GreaterThan(0).WithMessage("El Id debe ser un numero valido");
+            When(x => x.RedilId.HasValue, () =>
+            {
+                RuleFor(x => x.RedilId)
+                    .GreaterThan(0).WithMessage("El Id de redil no es válido.");
+            });
 
             RuleFor(x => x.IsActive).NotNull().WithMessage("El estado de actividad no puede estar vacío.");
         }

@@ -8,7 +8,7 @@ namespace redil_backend.Repository.Auth
     public interface IAuthRepository<TEntity>
     {
         Task<TEntity?> GetUserByEmail(string email);
-        Task<PaginatedResponse<TeacherListDto>> GetAllTeachers(int page, string search);
+        Task<PaginatedResponse<TeacherListDto>> GetAllTeachers(int page, string search, int? redilId = null, int? roleId = null);
         Task<TEntity> GetTeacher(int teacherId);
         Task<TEntity?> GetUserById(int id);
         Task<UserDetailsDto?> GetUserDetailsById(int id);

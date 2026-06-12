@@ -23,6 +23,7 @@ namespace redil_backend.Controllers
         private IValidator<RegisterTeacherDto> _registerTeacherValidator;
         private ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto, UpdateTeacherDto> _teacherService;
         private IValidator<UpdateTeacherDto> _updateTeacherValidator;
+        private IValidator<TeacherPasswordChangeDto> _teacherPasswordChangeValidator;
         private IClassService<ServiceResult<ClassDto>, RegisterClassDto> _classService;
         private IValidator<ClassStatsRequestDto> _classStatsRequestValidator;
         private IGroupService<ServiceResult<int>> _groupService;
@@ -31,6 +32,7 @@ namespace redil_backend.Controllers
             IValidator<RegisterTeacherDto> registerTeacherValidator, 
             ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto, UpdateTeacherDto> teacherService,
             IValidator<UpdateTeacherDto> updateTeacherValidator,
+            IValidator<TeacherPasswordChangeDto> teacherPasswordChangeValidator,
             IClassService<ServiceResult<ClassDto>, RegisterClassDto> classService,
             IValidator<ClassStatsRequestDto> classStatsRequestValidator,
             IGroupService<ServiceResult<int>> groupService)
@@ -38,6 +40,7 @@ namespace redil_backend.Controllers
             _registerTeacherValidator = registerTeacherValidator;
             _teacherService = teacherService;
             _updateTeacherValidator = updateTeacherValidator;
+            _teacherPasswordChangeValidator = teacherPasswordChangeValidator;
             _classService = classService;
             _classStatsRequestValidator = classStatsRequestValidator;
             _groupService = groupService;
@@ -45,7 +48,7 @@ namespace redil_backend.Controllers
 
         [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpGet]
-        public async Task<ActionResult<ApiResponse<PaginatedResponse<TeacherListDto>>>> GetTeachers([FromQuery]int page, [FromQuery]string? search)
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<TeacherListDto>>>> GetTeachers([FromQuery]int page, [FromQuery]string? search, [FromQuery]int? redilId, [FromQuery]int? roleId)
         {
         
             if(page < 1)
@@ -58,7 +61,7 @@ namespace redil_backend.Controllers
                 search = string.Empty;
             }
 
-            var teachers = await _teacherService.GetTeachers(page, search);
+            var teachers = await _teacherService.GetTeachers(page, search, redilId, roleId);
             return Ok(new ApiResponse<PaginatedResponse<TeacherListDto>>
             {
                 Success = true,
@@ -260,6 +263,61 @@ namespace redil_backend.Controllers
             {
                 Success = true,
                 Message = "Maestro creado con exito"
+            });
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpPatch("{id}/password")]
+        public async Task<ActionResult<ApiResponse<TeacherDto>>> ChangeTeacherPassword([FromRoute] int id, [FromBody] TeacherPasswordChangeDto passwordChangeDto)
+        {
+            if(id == 0)
+            {
+                return BadRequest(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = "Id del maestro no proporcionado"
+                });
+            }
+
+            var teacherExists = await _teacherService.TeacherExists(id);
+            if(!teacherExists)
+            {
+                return NotFound(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = "Maestro no existe"
+                });
+            }
+
+            var validationResult = await _teacherPasswordChangeValidator.ValidateAsync(passwordChangeDto);
+            if(!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = "Error de validación",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            var changeResult = await _teacherService.ChangeTeacherPassword(id, passwordChangeDto.NewPassword);
+            if(!changeResult.Success || changeResult.Data == null)
+            {
+                return BadRequest(new ApiResponse<TeacherDto>
+                {
+                    Success = false,
+                    Message = changeResult.ErrorMessage ?? "Error al cambiar la contraseña."
+                });
+            }
+
+            return Ok(new ApiResponse<TeacherDto>
+            {
+                Success = true,
+                Message = "Contraseña actualizada exitosamente."
             });
         }
     }

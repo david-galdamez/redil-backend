@@ -28,11 +28,27 @@ namespace redil_backend.Services.Teacher
             return ServiceResult<TeacherDto>.Ok(teacherDto);
         }
 
-        public async Task<ServiceResult<PaginatedResponse<TeacherListDto>>> GetTeachers(int page, string search)
+        public async Task<ServiceResult<PaginatedResponse<TeacherListDto>>> GetTeachers(int page, string search, int? redilId = null, int? roleId = null)
         {
-            var teachers = await _authRepository.GetAllTeachers(page, search);
+            var teachers = await _authRepository.GetAllTeachers(page, search, redilId, roleId);
 
             return ServiceResult<PaginatedResponse<TeacherListDto>>.Ok(teachers);
+        }
+
+        public async Task<ServiceResult<TeacherDto>> ChangeTeacherPassword(int teacherId, string newPassword)
+        {
+            var teacher = await _authRepository.GetTeacher(teacherId);
+            if(teacher == null)
+            {
+                return ServiceResult<TeacherDto>.Fail("Maestro no existe.");
+            }
+
+            teacher.Password = _passwordHasher.HashPassword(teacher, newPassword);
+
+            await _authRepository.Update(teacher);
+            await _authRepository.Save();
+
+            return ServiceResult<TeacherDto>.Ok(teacher.ToTeacherDto());
         }
 
         public async Task<ServiceResult<TeacherDto>> RegisterTeacher(RegisterTeacherDto registerTeacherDto)

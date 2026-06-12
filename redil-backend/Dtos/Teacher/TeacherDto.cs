@@ -2,5 +2,5 @@
 
 namespace redil_backend.Dtos.Teacher
 {
-    public record TeacherDto(string Name, string Email, int RedilId, bool Active);
+    public record TeacherDto(string Name, string Email, int? RedilId, bool Active);
 }

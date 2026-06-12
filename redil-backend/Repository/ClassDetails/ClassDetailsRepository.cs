@@ -36,10 +36,14 @@ namespace redil_backend.Repository.ClassDetails
                     .Where(cd =>
                         cd.Class.ClassDate >= fromUtc &&
                         cd.Class.ClassDate <= toUtc &&
-                        cd.Student.StudentRedils.Any(sr => 
-                            sr.Active &&
+                        cd.Student.StudentRedils.Any(sr =>
                             sr.RedilId == cd.Class.RedilId &&
-                            cd.Class.ClassDate >= sr.JoinedAt
+                            cd.Class.ClassDate >= sr.JoinedAt &&
+                            !cd.Student.StudentRedils.Any(otherSr =>
+                                otherSr.Active &&
+                                otherSr.RedilId != cd.Class.RedilId &&
+                                otherSr.JoinedAt <= cd.Class.ClassDate
+                            )
                         )
                     );
 

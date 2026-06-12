@@ -54,6 +54,7 @@ builder.Services.AddScoped<IValidator<RegisterRedilDto>, RegisterRedilValidator>
 builder.Services.AddScoped<ITeacherService<ServiceResult<TeacherDto>, RegisterTeacherDto, UpdateTeacherDto>, TeacherService>();
 builder.Services.AddScoped<IValidator<RegisterTeacherDto>, RegisterTeacherValidator>();
 builder.Services.AddScoped<IValidator<UpdateTeacherDto>, UpdateTeacherValidator>();
+builder.Services.AddScoped<IValidator<TeacherPasswordChangeDto>, TeacherPasswordChangeValidator>();
 
 // Classes
 builder.Services.AddScoped<IClassRepository<Class>, ClassRepository>();

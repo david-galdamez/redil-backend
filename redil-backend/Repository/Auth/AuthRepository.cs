@@ -21,13 +21,23 @@ namespace redil_backend.Repository.Auth
         public async Task Add(User entity) =>
             await _context.Users.AddAsync(entity);
 
-        public async Task<PaginatedResponse<TeacherListDto>> GetAllTeachers(int page, string search)
+        public async Task<PaginatedResponse<TeacherListDto>> GetAllTeachers(int page, string search, int? redilId = null, int? roleId = null)
         {
             var query = _context.Users.AsQueryable();
 
             if(!search.IsNullOrEmpty())
             {
                 query = query.Where(t => t.Name.ToLower().Contains(search.ToLower()));
+            }
+
+            if(redilId.HasValue)
+            {
+                query = query.Where(t => t.RedilId == redilId.Value);
+            }
+
+            if(roleId.HasValue)
+            {
+                query = query.Where(t => t.RoleId == roleId.Value);
             }
 
             query = query.OrderByDescending(t => t.Id);
@@ -46,7 +56,8 @@ namespace redil_backend.Repository.Auth
                 .Select(t => new TeacherListDto(
                     t.Id,
                     t.Name,
-                    t.Redil == null ? "Sin Redil Asignado" : t.Redil.Name
+                    t.Redil == null ? "Sin Redil Asignado" : t.Redil.Name,
+                    t.IsActive
                 ))
                 .ToListAsync();
 

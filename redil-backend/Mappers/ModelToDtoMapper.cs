@@ -25,7 +25,7 @@ namespace redil_backend.Mappers
 
         public static TeacherDto ToTeacherDto(this User teacher)
         {
-            return new TeacherDto(teacher.Name, teacher.Email, teacher.Redil?.Id ?? 0, teacher.IsActive);
+            return new TeacherDto(teacher.Name, teacher.Email, teacher.Redil?.Id, teacher.IsActive);
         }
 
         public static RedilDto ToRedilDto(this Redile redil)
