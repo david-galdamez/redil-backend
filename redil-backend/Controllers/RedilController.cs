@@ -229,6 +229,51 @@ namespace redil_backend.Controllers
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpPost("stats/export")]
+        public async Task<IActionResult> ExportRedilStats([FromBody] ClassStatsRequestDto classStatsRequest)
+        {
+            var validationResult = await _classStatsRequestValidator.ValidateAsync(classStatsRequest);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Errores de validacion.",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            if (classStatsRequest.GroupId.HasValue)
+            {
+                var validGroup = await _groupService.ValidateGroup(classStatsRequest.GroupId.Value);
+                if (!validGroup.Success || !validGroup.Data)
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "Id del grupo no existe."
+                    });
+                }
+            }
+
+            var bytes = await _classService.GetRedilStatsExport(classStatsRequest.RedilId, classStatsRequest);
+            if (bytes == null)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Error al generar el archivo."
+                });
+            }
+
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "estadisticas.xlsx");
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpPost]
         public async Task<ActionResult<ApiResponse<RedilDto>>> RegisterRedil([FromBody]RegisterRedilDto registerRedilDto)
         {

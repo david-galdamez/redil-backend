@@ -168,6 +168,48 @@ namespace redil_backend.Controllers
             });
         }
 
+        [Authorize]
+        [HttpPost("redil/stats/export")]
+        public async Task<IActionResult> ExportTeacherRedilStats([FromBody] ClassStatsRequestDto classStatsRequest)
+        {
+            var validationResult = await _classStatsRequestValidator.ValidateAsync(classStatsRequest);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Errores de validacion.",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            var redilId = await _currentUserService.GetUserRedilId(User.GetUserId());
+            if (!redilId.HasValue)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "No tienes permiso para exportar estas estadisticas."
+                });
+            }
+
+            var bytes = await _classService.GetRedilStatsExport(redilId.Value, classStatsRequest);
+            if (bytes == null)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Error al generar el archivo."
+                });
+            }
+
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "estadisticas.xlsx");
+        }
+
         [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpPut("{id}")]
         public async Task<ActionResult<ApiResponse<TeacherDto>>> UpdateTeacher([FromRoute] int id, [FromBody] UpdateTeacherDto updateTeacherDto)

@@ -10,6 +10,7 @@ using redil_backend.Repository.Redil;
 using redil_backend.Repository.StudentRediles;
 using redil_backend.Repository.Students;
 using redil_backend.Utils;
+using ClosedXML.Excel;
 
 namespace redil_backend.Services.Classes
 {
@@ -136,6 +137,62 @@ namespace redil_backend.Services.Classes
                 CurrentPage = page,
                 TotalPages = totalPages
             });
+        }
+
+        public async Task<byte[]?> GetRedilStatsExport(int? redilId, ClassStatsRequestDto classStatsRequest)
+        {
+            var details = await _classDetailsRepository.GetClassDetailsForStats(
+                redilId, classStatsRequest.FromDate, classStatsRequest.ToDate, classStatsRequest.GroupId, classStatsRequest.Search
+            );
+
+            var allStats = details
+                .GroupBy(d => new { d.Student, RedilName = d.Class.Redil.Name })
+                .Select(g =>
+                {
+                    var totalClassesForStudent = g.Select(d => d.Class.ClassDate.Date).Distinct().Count();
+                    var attended = g.Count(d => d.Attendance);
+                    var percentage = totalClassesForStudent == 0
+                        ? 0
+                        : (float)attended / totalClassesForStudent * 100;
+
+                    return new RedilClassStatDto(
+                        g.Key.Student.Name,
+                        g.Key.Student.Group?.Name ?? "-",
+                        g.Key.RedilName,
+                        g.Key.Student.IsServer,
+                        MathF.Round(percentage, 1)
+                    );
+                }).ToList();
+
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Estadísticas");
+
+            ws.Cell(1, 1).Value = "Estudiante";
+            ws.Cell(1, 2).Value = "Grupo";
+            ws.Cell(1, 3).Value = "Redil";
+            ws.Cell(1, 4).Value = "Tipo";
+            ws.Cell(1, 5).Value = "Asistencia (%)";
+
+            var headerRange = ws.Range(1, 1, 1, 5);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromArgb(0xE5E7EB);
+
+            for (int i = 0; i < allStats.Count; i++)
+            {
+                var stat = allStats[i];
+                var row = i + 2;
+                ws.Cell(row, 1).Value = stat.Name;
+                ws.Cell(row, 2).Value = stat.GroupName;
+                ws.Cell(row, 3).Value = stat.RedilName;
+                ws.Cell(row, 4).Value = stat.IsServer ? "Servidor" : "Pueblo";
+                ws.Cell(row, 5).Value = stat.AttendancePercentage;
+            }
+
+            ws.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            return stream.ToArray();
         }
 
         public async Task<ServiceResult<string>> PassAssist(int classId)
