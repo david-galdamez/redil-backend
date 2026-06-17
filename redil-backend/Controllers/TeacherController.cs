@@ -27,6 +27,7 @@ namespace redil_backend.Controllers
         private IClassService<ServiceResult<ClassDto>, RegisterClassDto> _classService;
         private IValidator<ClassStatsRequestDto> _classStatsRequestValidator;
         private IGroupService<ServiceResult<int>> _groupService;
+        private CurrentUserService _currentUserService;
 
         public TeacherController(
             IValidator<RegisterTeacherDto> registerTeacherValidator, 
@@ -35,7 +36,8 @@ namespace redil_backend.Controllers
             IValidator<TeacherPasswordChangeDto> teacherPasswordChangeValidator,
             IClassService<ServiceResult<ClassDto>, RegisterClassDto> classService,
             IValidator<ClassStatsRequestDto> classStatsRequestValidator,
-            IGroupService<ServiceResult<int>> groupService)
+            IGroupService<ServiceResult<int>> groupService,
+            CurrentUserService currentUserService)
         {
             _registerTeacherValidator = registerTeacherValidator;
             _teacherService = teacherService;
@@ -44,6 +46,7 @@ namespace redil_backend.Controllers
             _classService = classService;
             _classStatsRequestValidator = classStatsRequestValidator;
             _groupService = groupService;
+            _currentUserService = currentUserService;
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
@@ -125,7 +128,7 @@ namespace redil_backend.Controllers
                 });
             }
 
-            var redilId = User.GetRedilId();
+            var redilId = await _currentUserService.GetUserRedilId(User.GetUserId());
             if(!redilId.HasValue)
             {
                 return Unauthorized(new ApiResponse<PaginatedResponse<RedilClassStatDto>>

@@ -7,5 +7,6 @@ namespace redil_backend.Services.Students
     {
         Task<ServiceResult<PaginatedResponse<StudentListDto>>> GetStudentByRedil(int id, int page, string search);
         Task<T> RegisterStudent(Tr registerStudentDto, string code);
+        Task<ServiceResult<bool>> FinishCourse(int redilId);
     }
 }

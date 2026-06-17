@@ -27,6 +27,15 @@ namespace redil_backend.Repository.StudentRediles
             await _context.StudentRediles.Where(sr => sr.RedilId == redilId && sr.Active)
                 .ToListAsync();
 
+        public async Task DeactivateAllByRedilId(int redilId)
+        {
+            var relations = await _context.StudentRediles
+                .Where(sr => sr.RedilId == redilId && sr.Active)
+                .ToListAsync();
+            foreach (var r in relations)
+                r.Active = false;
+        }
+
         public async Task Save() =>
             await _context.SaveChangesAsync();
 

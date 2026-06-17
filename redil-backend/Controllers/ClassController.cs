@@ -20,22 +20,30 @@ namespace redil_backend.Controllers
         private IValidator<RegisterClassDto> _registerClassValidator;
         private IValidator<RegisterAttendanceDto> _registerAttendanceValidator;
         private IClassService<ServiceResult<ClassDto>, RegisterClassDto> _classService;
+        private CurrentUserService _currentUserService;
 
         public ClassController(
             IValidator<RegisterClassDto> registerClassValidator, 
             IValidator<RegisterAttendanceDto> registerAttendanceValidator,
             IClassService<ServiceResult<ClassDto>, RegisterClassDto> classService,
-            IValidator<ClassStatsRequestDto> classStatsRequestValidator)
+            IValidator<ClassStatsRequestDto> classStatsRequestValidator,
+            CurrentUserService currentUserService)
         {
             _registerClassValidator = registerClassValidator;
             _classService = classService;
             _registerAttendanceValidator = registerAttendanceValidator;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
         public async Task<ActionResult<ApiResponse<PaginatedResponse<ClassListDto>>>> GetClasses([FromQuery]int page)
         {
-            var redilId = User.GetRedilId();
+            if(page < 1)
+            {
+                page = 1;
+            }
+
+            var redilId = await _currentUserService.GetUserRedilId(User.GetUserId());
             if(redilId == null)
             {
                 return Unauthorized(new ApiResponse<PaginatedResponse<ClassListDto>>
@@ -43,11 +51,6 @@ namespace redil_backend.Controllers
                     Success = false,
                     Message = "No tienes permiso para ver las clases."
                 });
-            }
-
-            if(page < 1)
-            {
-                page = 1;
             }
 
             var classesResult = await _classService.GetClasses(redilId.Value, page);
@@ -277,7 +280,7 @@ namespace redil_backend.Controllers
                 });
             }
 
-            var redilId = User.GetRedilId();
+            var redilId = await _currentUserService.GetUserRedilId(User.GetUserId());
             if(!redilId.HasValue)
             {
                 return Unauthorized(new ApiResponse<ClassDto>

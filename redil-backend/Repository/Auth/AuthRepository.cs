@@ -86,7 +86,7 @@ namespace redil_backend.Repository.Auth
 
             await _context.Users.Include(u => u.Redil)
                 .Where(u => u.Id == id)
-                .Select(u => new UserDetailsDto(u.Name, u.Email, ((UserRole)u.RoleId).ToString(), u.Redil != null ? u.Redil.Name : "No hay redil asignado"))
+                .Select(u => new UserDetailsDto(u.Name, u.Email, ((UserRole)u.RoleId).ToString(), u.Redil != null ? u.Redil.Name : "No hay redil asignado", u.RedilId))
                 .FirstOrDefaultAsync();
 
         public async Task Save() =>

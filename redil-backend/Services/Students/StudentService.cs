@@ -109,5 +109,18 @@ namespace redil_backend.Services.Students
 
             return ServiceResult<int>.Ok(student.Id);
         }
+        public async Task<ServiceResult<bool>> FinishCourse(int redilId)
+        {
+            var redilExists = await _redilRepository.DoesRedilExists(redilId);
+            if (!redilExists)
+            {
+                return ServiceResult<bool>.Fail("El redil no existe.");
+            }
+
+            await _studentRedilRepository.DeactivateAllByRedilId(redilId);
+            await _studentRedilRepository.Save();
+
+            return ServiceResult<bool>.Ok(true);
+        }
     }
 }

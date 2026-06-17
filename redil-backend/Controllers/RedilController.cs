@@ -8,10 +8,12 @@ using redil_backend.Dtos;
 using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Responses;
+using redil_backend.Dtos.Student;
 using redil_backend.Services;
 using redil_backend.Services.Classes;
 using redil_backend.Services.Groups;
 using redil_backend.Services.Redil;
+using redil_backend.Services.Students;
 
 namespace redil_backend.Controllers
 {
@@ -25,19 +27,25 @@ namespace redil_backend.Controllers
         private IValidator<ClassStatsRequestDto> _classStatsRequestValidator;
         private IClassService<ServiceResult<ClassDto>, RegisterClassDto> _classService;
         private IGroupService<ServiceResult<int>> _groupService;
+        private IStudentService<ServiceResult<int>, RegisterStudentDto> _studentService;
+        private CurrentUserService _currentUserService;
 
         public RedilController(
             IRedilService<ServiceResult<RedilDto>, RegisterRedilDto> redilService,
             IValidator<RegisterRedilDto> registerRedilValidator,
             IClassService<ServiceResult<ClassDto>, RegisterClassDto> classService,
             IValidator<ClassStatsRequestDto> classStatsRequestValidator,
-            IGroupService<ServiceResult<int>> groupService)
+            IGroupService<ServiceResult<int>> groupService,
+            IStudentService<ServiceResult<int>, RegisterStudentDto> studentService,
+            CurrentUserService currentUserService)
         {
             _redilService = redilService;
             _registerRedilValidator = registerRedilValidator;
             _classStatsRequestValidator = classStatsRequestValidator;
             _classService = classService;
             _groupService = groupService;
+            _studentService = studentService;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
@@ -58,7 +66,7 @@ namespace redil_backend.Controllers
         public async Task<ActionResult<ApiResponse<string>>> GetRedilCode()
         {
 
-            var redilId = User.GetRedilId();
+            var redilId = await _currentUserService.GetUserRedilId(User.GetUserId());
             if(!redilId.HasValue)
             {
                 return BadRequest(new ApiResponse<string>
@@ -302,6 +310,27 @@ namespace redil_backend.Controllers
                 Success = true,
                 Message = "Redil actualizado.",
                 Data = updateResult.Data
+            });
+        }
+        [Authorize]
+        [HttpPost("{id}/finish-course")]
+        public async Task<ActionResult<ApiResponse<bool>>> FinishCourse([FromRoute] int id)
+        {
+            var result = await _studentService.FinishCourse(id);
+            if (!result.Success)
+            {
+                return BadRequest(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = result.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<bool>
+            {
+                Success = true,
+                Data = true,
+                Message = "Curso terminado. Todos los estudiantes han sido desactivados."
             });
         }
     }

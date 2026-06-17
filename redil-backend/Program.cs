@@ -81,6 +81,9 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 // Jwt
 builder.Services.AddSingleton<TokenProvider>();
 
+// Current User
+builder.Services.AddScoped<CurrentUserService>();
+
 // Entity Framework
 builder.Services.AddDbContext<RedilDbContext>(options =>
 {

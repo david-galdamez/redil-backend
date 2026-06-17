@@ -9,6 +9,7 @@ namespace redil_backend.Repository.StudentRediles
         Task<StudentRedil?> GetActiveRelation(int studentId);
         Task<StudentRedil?> GetRelation(int studentId, int redilId);
         Task<ICollection<StudentRedil>> GetStudents(int redilId);
+        Task DeactivateAllByRedilId(int redilId);
         Task Save();
     }
 }
