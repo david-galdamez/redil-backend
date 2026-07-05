@@ -125,6 +125,7 @@ builder.Services.AddCors(options =>
             "https://redil-frontend.vercel.app", 
             "https://comu-redil-api-development.up.railway.app", 
             "https://redil-dev.comu-app.com", 
+            "https://redil-web-app.netlify.app",
             "https://redil.comu-app.com")
               .AllowAnyHeader()
               .AllowAnyMethod()
