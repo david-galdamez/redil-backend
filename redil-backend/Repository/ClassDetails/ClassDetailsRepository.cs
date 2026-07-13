@@ -59,7 +59,7 @@ namespace redil_backend.Repository.ClassDetails
 
             if(search != null)
             {
-                query = query.Where(cd => cd.Student.Name.Contains(search));
+                query = query.Where(cd => cd.Student.Name.ToLower().Contains(search.ToLower()));
             }
 
             return await query.OrderBy(cd => cd.Class.ClassDate).ToListAsync();
