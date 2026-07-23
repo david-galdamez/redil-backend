@@ -1,5 +1,6 @@
 ﻿using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
+using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Redil;
 using redil_backend.Dtos.Teacher;
 using redil_backend.Models;
@@ -9,19 +10,37 @@ namespace redil_backend.Mappers
 {
     public static class ModelToDtoMapper
     {
-        public static UserDto ToUserDto(this users user)
+        public static UserDto ToUserDto(this User user)
         {
-            return new UserDto(user.id, user.name, user.email, (UserRole)user.role_id);
+            return new UserDto(user.Id, user.Name, user.Email, (UserRole)user.RoleId, user.RedilId);
         }
 
-        public static TeacherDto ToTeacherDto(this users teacher)
+        public static LogedUserDto ToLogedUserDto(this User user)
         {
-            return new TeacherDto(teacher.name, teacher.email, teacher.redil?.name ?? "", (UserRole)teacher.role_id);
+
+            var role = ((UserRole)user.RoleId).ToString();
+
+            return new LogedUserDto(user.Id, user.Name, role);
         }
 
-        public static RedilDto ToRedilDto(this rediles redil)
+        public static TeacherDto ToTeacherDto(this User teacher)
         {
-            return new RedilDto(redil.id, redil.name, redil.description);
+            return new TeacherDto(teacher.Name, teacher.Email, teacher.Redil?.Id, teacher.IsActive);
+        }
+
+        public static RedilDto ToRedilDto(this Redile redil)
+        {
+            return new RedilDto(redil.Id, redil.Name, redil.Description);
+        }
+
+        public static ClassDto ToClassDto(this Class classes)
+        {
+            return new ClassDto(classes.Id, classes.RedilId, classes.TeacherId, classes.ClassDate, classes.ClassDescription);
+        }
+
+        public static ClassDetailsDto ToClassDetailsDto(this Class classes)
+        {
+            return new ClassDetailsDto(classes.Id, classes.ClassDescription, classes.ClassDate, classes.AttendanceToken, classes.AttendanceToken != null && classes.ExpiresAt <= DateTime.Now);
         }
     }
 }

@@ -1,6 +1,9 @@
 ﻿using redil_backend.Domain.Enums;
 using redil_backend.Dtos.Auth;
+using redil_backend.Dtos.Classes;
+using redil_backend.Dtos.Groups;
 using redil_backend.Dtos.Redil;
+using redil_backend.Dtos.Student;
 using redil_backend.Dtos.Teacher;
 using redil_backend.Models;
 
@@ -8,33 +11,63 @@ namespace redil_backend.Mappers
 {
     public static class DtoToModelMapper
     {
-        public static users ToUserModel(this AuthRegisterDto authRegisterDto, UserRole role)
+        public static User ToUserModel(this AuthRegisterDto authRegisterDto, UserRole role)
         {
-            return new users
+            return new User
             {
-                name = authRegisterDto.Name,
-                email = authRegisterDto.Email,
-                role_id = (int)role,
+                Name = authRegisterDto.Name,
+                Email = authRegisterDto.Email,
+                RoleId = (int)role,
             };
         }
 
-        public static users ToTeacherModel(this RegisterTeacherDto registerTeacherDto, UserRole role)
+        public static User ToTeacherModel(this RegisterTeacherDto registerTeacherDto, UserRole role)
         {
-            return new users
+            return new User
             {
-                name = registerTeacherDto.Name,
-                email = registerTeacherDto.Email,
-                role_id = (int)role,
-                redil_id = registerTeacherDto.RedilId,
+                Name = registerTeacherDto.Name,
+                Email = registerTeacherDto.Email,
+                RoleId = (int)role,
+                RedilId = registerTeacherDto.RedilId,
             };
         }
 
-        public static rediles ToRedilModel(this RegisterRedilDto registerRedilDto)
+        public static Redile ToRedilModel(this RegisterRedilDto registerRedilDto)
         {
-            return new rediles
+            return new Redile
             {
-                name = registerRedilDto.Name,
-                description = registerRedilDto.Description,
+                Name = registerRedilDto.Name,
+                Description = registerRedilDto.Description,
+            };
+        }
+
+        public static Class ToClassModel(this RegisterClassDto registerClassDto, int RedilId, int TeacherId)
+        {
+            return new Class
+            {
+                RedilId = RedilId,
+                TeacherId = TeacherId,
+                ClassDate = registerClassDto.Date.ToUniversalTime(),
+                ClassDescription = registerClassDto.Description,
+            };
+        }
+
+        public static Student ToStudentModel(this RegisterStudentDto registerStudentDto)
+        {
+            return new Student
+            {
+                Name = registerStudentDto.Name,
+                Email = registerStudentDto.Email,
+                GroupId = registerStudentDto.GroupId,
+                IsServer = registerStudentDto.IsServer,
+            };
+        }
+
+        public static Group ToGroupModel(this RegisterGroupDto registerGroupDto)
+        {
+            return new Group
+            {
+                Name = registerGroupDto.Name,
             };
         }
     }
