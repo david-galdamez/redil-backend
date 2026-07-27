@@ -90,6 +90,7 @@ namespace redil_backend.Services.Redil
 
             redil.Name = updateRedilDto.Name;
             redil.Description = updateRedilDto.Description;
+            redil.NumCourse = updateRedilDto.NumCourse;
 
             await _redilRepository.Update(redil);
             await _redilRepository.Save();

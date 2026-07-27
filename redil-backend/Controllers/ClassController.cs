@@ -187,6 +187,61 @@ namespace redil_backend.Controllers
             });
         }
 
+        [HttpPut("assist/manual/{attendanceToken}")]
+        public async Task<ActionResult<ApiResponse<string>>> RegisterManualAssist(
+            [FromRoute] string attendanceToken, [FromBody] RegisterAttendanceDto registerAttendanceDto)
+        {
+            if (attendanceToken.IsNullOrEmpty())
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "El token de la clase es inválido."
+                });
+            }
+
+            var validationResult = await _registerAttendanceValidator.ValidateAsync(registerAttendanceDto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Errores de validación.",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            var classExists = await _classService.ClassExists(attendanceToken);
+            if (!classExists)
+            {
+                return NotFound(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "La clase no existe."
+                });
+            }
+
+            var result = await _classService.RegisterManualAssist(attendanceToken, registerAttendanceDto);
+            if (!result.Success)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = result.ErrorMessage
+                });
+            }
+
+            return Ok(new ApiResponse<string>
+            {
+                Success = true,
+                Message = result.Data
+            });
+        }
+
         [AllowAnonymous]
         [HttpPost("assist/register/{attendanceToken}")]
         public async Task<ActionResult<ApiResponse<string>>> RegisterAssist([FromRoute]string attendanceToken, [FromBody]RegisterAttendanceDto registerAssistDto)

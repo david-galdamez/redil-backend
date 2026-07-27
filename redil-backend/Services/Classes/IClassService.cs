@@ -16,7 +16,9 @@ namespace redil_backend.Services.Classes
         Task<bool> AssistTokenExists(string attendanceToken);
         Task<bool> ValidateAssistToken(string attendanceToken);
         Task<T> RegisterAssist(string attendanceToken, RegisterAttendanceDto registerAttendanceDto);
+        Task<ServiceResult<string>> RegisterManualAssist(string attendanceToken, RegisterAttendanceDto registerAttendanceDto);
         Task<ServiceResult<PaginatedResponse<RedilClassStatDto>>> GetRedilStats(int? redilId, ClassStatsRequestDto classStatsRequest, int page);
         Task<byte[]?> GetRedilStatsExport(int? redilId, ClassStatsRequestDto classStatsRequest);
+        Task<byte[]> GetRedilStatsPdfExport(int? redilId, ClassStatsRequestDto classStatsRequest, StatsExportFiltersDto filters);
     }
 }

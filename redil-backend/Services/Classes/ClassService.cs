@@ -11,6 +11,9 @@ using redil_backend.Repository.StudentRediles;
 using redil_backend.Repository.Students;
 using redil_backend.Utils;
 using ClosedXML.Excel;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace redil_backend.Services.Classes
 {
@@ -66,9 +69,9 @@ namespace redil_backend.Services.Classes
                 return ServiceResult<AssistStatusDto>.Fail("Redil no encontrado.");
             }
 
-            var emails = await _classDetailsRepository.GetEmailsByClassId(classModel.Id);
+            var phones = await _classDetailsRepository.GetPhonesByClassId(classModel.Id);
 
-            var assistStatus = new AssistStatusDto(redil.Name, classModel.ClassDescription, classModel.ClassDate, emails);
+            var assistStatus = new AssistStatusDto(redil.Name, classModel.ClassDescription, classModel.ClassDate, phones);
             return ServiceResult<AssistStatusDto>.Ok(assistStatus);
         }
 
@@ -94,75 +97,27 @@ namespace redil_backend.Services.Classes
         public async Task<ServiceResult<PaginatedResponse<RedilClassStatDto>>> GetRedilStats(
             int? redilId, ClassStatsRequestDto classStatsRequest, int page)
         {
-            var details = await _classDetailsRepository.GetClassDetailsForStats(
-                redilId, classStatsRequest.FromDate, classStatsRequest.ToDate, classStatsRequest.GroupId, classStatsRequest.Search
-            );
+            const int pageSize = 10;
+            var result = await _classDetailsRepository.GetClassStatsPaged(
+                redilId,
+                classStatsRequest.FromDate,
+                classStatsRequest.ToDate,
+                classStatsRequest.GroupId,
+                classStatsRequest.Search,
+                page,
+                pageSize);
 
-            if (!details.Any())
-                return ServiceResult<PaginatedResponse<RedilClassStatDto>>.Ok(new PaginatedResponse<RedilClassStatDto>());
-
-            var allStats = details
-                .GroupBy(d => new { d.Student, RedilName = d.Class.Redil.Name })
-                .Select(g =>
-                {
-                    var totalClassesForStudent = g.Select(d => d.Class.ClassDate.Date).Distinct().Count();
-                    var attended = g.Count(d => d.Attendance);
-                    var percentage = totalClassesForStudent == 0
-                        ? 0
-                        : (float)attended / totalClassesForStudent * 100;
-
-                    return new RedilClassStatDto(
-                        g.Key.Student.Name,
-                        g.Key.Student.Group?.Name ?? "-",
-                        g.Key.RedilName,
-                        g.Key.Student.IsServer,
-                        MathF.Round(percentage, 1)
-                    );
-                }).ToList();
-
-            // Paginación sobre los stats agrupados
-            var pageSize = 10;
-            var totalRecords = allStats.Count;
-            var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
-            var pagedStats = allStats
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            return ServiceResult<PaginatedResponse<RedilClassStatDto>>.Ok(new PaginatedResponse<RedilClassStatDto>
-            {
-                Data = pagedStats,
-                TotalRecords = totalRecords,
-                PageSize = pageSize,
-                CurrentPage = page,
-                TotalPages = totalPages
-            });
+            return ServiceResult<PaginatedResponse<RedilClassStatDto>>.Ok(result);
         }
 
         public async Task<byte[]?> GetRedilStatsExport(int? redilId, ClassStatsRequestDto classStatsRequest)
         {
-            var details = await _classDetailsRepository.GetClassDetailsForStats(
-                redilId, classStatsRequest.FromDate, classStatsRequest.ToDate, classStatsRequest.GroupId, classStatsRequest.Search
-            );
-
-            var allStats = details
-                .GroupBy(d => new { d.Student, RedilName = d.Class.Redil.Name })
-                .Select(g =>
-                {
-                    var totalClassesForStudent = g.Select(d => d.Class.ClassDate.Date).Distinct().Count();
-                    var attended = g.Count(d => d.Attendance);
-                    var percentage = totalClassesForStudent == 0
-                        ? 0
-                        : (float)attended / totalClassesForStudent * 100;
-
-                    return new RedilClassStatDto(
-                        g.Key.Student.Name,
-                        g.Key.Student.Group?.Name ?? "-",
-                        g.Key.RedilName,
-                        g.Key.Student.IsServer,
-                        MathF.Round(percentage, 1)
-                    );
-                }).ToList();
+            var allStats = await _classDetailsRepository.GetClassStatsAll(
+                redilId,
+                classStatsRequest.FromDate,
+                classStatsRequest.ToDate,
+                classStatsRequest.GroupId,
+                classStatsRequest.Search);
 
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Estadísticas");
@@ -183,7 +138,7 @@ namespace redil_backend.Services.Classes
                 var row = i + 2;
                 ws.Cell(row, 1).Value = stat.Name;
                 ws.Cell(row, 2).Value = stat.GroupName;
-                ws.Cell(row, 3).Value = stat.RedilName;
+                ws.Cell(row, 3).Value = string.Join(", ", stat.Rediles);
                 ws.Cell(row, 4).Value = stat.IsServer ? "Servidor" : "Pueblo";
                 ws.Cell(row, 5).Value = stat.AttendancePercentage;
             }
@@ -245,10 +200,10 @@ namespace redil_backend.Services.Classes
                 return ServiceResult<ClassDto>.Fail("Clase no encontrada.");
             }
 
-            var studentModel = await _studentRepository.GetStudentByEmail(registerAttendanceDto.Email, classModel.RedilId);
+            var studentModel = await _studentRepository.GetStudentByPhone(registerAttendanceDto.Phone, classModel.RedilId);
             if(studentModel == null)
             {
-                return ServiceResult<ClassDto>.Fail("Correo no registrado en el redil.");
+                return ServiceResult<ClassDto>.Fail("Número de teléfono no registrado en el redil.");
             }
 
             var classDetail = await _classDetailsRepository.GetClassDetail(classModel.Id, studentModel.Id);
@@ -294,6 +249,34 @@ namespace redil_backend.Services.Classes
             return ServiceResult<ClassDto>.Ok(classDto);
         }
 
+        public async Task<ServiceResult<string>> RegisterManualAssist(string attendanceToken, RegisterAttendanceDto registerAttendanceDto)
+        {
+            var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
+            if (classModel == null)
+            {
+                return ServiceResult<string>.Fail("Clase no encontrada.");
+            }
+
+            var studentModel = await _studentRepository.GetStudentByPhone(registerAttendanceDto.Phone, classModel.RedilId);
+            if (studentModel == null)
+            {
+                return ServiceResult<string>.Fail("Número de teléfono no registrado en el redil.");
+            }
+
+            var classDetail = await _classDetailsRepository.GetClassDetail(classModel.Id, studentModel.Id);
+            if (classDetail == null)
+            {
+                return ServiceResult<string>.Fail("El estudiante no está inscrito en esta clase.");
+            }
+
+            classDetail.Attendance = registerAttendanceDto.Attended;
+
+            await _classDetailsRepository.Update(classDetail);
+            await _classDetailsRepository.Save();
+
+            return ServiceResult<string>.Ok(registerAttendanceDto.Attended ? "Asistencia registrada." : "Inasistencia registrada.");
+        }
+
         public async Task<bool> AssistTokenExists(string attendanceToken)
         {
             var classModel = await _classRepository.GetByAttendanceToken(attendanceToken);
@@ -314,6 +297,145 @@ namespace redil_backend.Services.Classes
             }
 
             return classModel.AttendanceToken != null && classModel.ExpiresAt > DateTime.UtcNow;
+        }
+
+        public async Task<byte[]> GetRedilStatsPdfExport(int? redilId, ClassStatsRequestDto classStatsRequest, StatsExportFiltersDto filters)
+        {
+            var allStats = await _classDetailsRepository.GetClassStatsAll(
+                redilId,
+                classStatsRequest.FromDate,
+                classStatsRequest.ToDate,
+                classStatsRequest.GroupId,
+                classStatsRequest.Search);
+
+            var salvadorTz = TimeZoneInfo.FindSystemTimeZoneById("America/El_Salvador");
+            var exportedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, salvadorTz);
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(1.5f, Unit.Centimetre);
+                    page.DefaultTextStyle(x => x.FontSize(10));
+
+                    // Encabezado
+                    page.Header().Column(col =>
+                    {
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem()
+                                .Text("Estadísticas de Rediles")
+                                .Bold().FontSize(18).FontColor(Color.FromHex("#1e3a5f"));
+
+                            row.ConstantItem(155).Column(right =>
+                            {
+                                right.Item().AlignRight()
+                                    .Text("Exportado el:").FontSize(8).FontColor(Color.FromHex("#6b7280"));
+                                right.Item().AlignRight()
+                                    .Text(exportedAt.ToString("dd/MM/yyyy HH:mm")).FontSize(8).FontColor(Color.FromHex("#6b7280"));
+                            });
+                        });
+
+                        col.Item().PaddingTop(6).LineHorizontal(1.5f).LineColor(Color.FromHex("#1e3a5f"));
+                        col.Item().Height(10);
+                    });
+
+                    // Contenido
+                    page.Content().Column(col =>
+                    {
+                        // Caja de filtros
+                        col.Item()
+                            .Border(1).BorderColor(Color.FromHex("#d1d5db"))
+                            .Background(Color.FromHex("#f9fafb"))
+                            .Padding(10)
+                            .Column(filterCol =>
+                            {
+                                filterCol.Item()
+                                    .PaddingBottom(5)
+                                    .Text("Filtros aplicados")
+                                    .Bold().FontSize(10).FontColor(Color.FromHex("#1e3a5f"));
+
+                                filterCol.Item().Text(t =>
+                                {
+                                    t.Span("Período: ").Bold();
+                                    t.Span($"{filters.FromDate:dd/MM/yyyy} – {filters.ToDate:dd/MM/yyyy}");
+                                });
+
+                                filterCol.Item().Text(t =>
+                                {
+                                    t.Span("Redil: ").Bold();
+                                    t.Span(filters.RedilName ?? "Todos");
+                                });
+
+                                filterCol.Item().Text(t =>
+                                {
+                                    t.Span("Grupo: ").Bold();
+                                    t.Span(filters.GroupName ?? "Todos");
+                                });
+
+                                if (!string.IsNullOrWhiteSpace(filters.Search))
+                                {
+                                    filterCol.Item().Text(t =>
+                                    {
+                                        t.Span("Búsqueda: ").Bold();
+                                        t.Span($"\"{filters.Search}\"");
+                                    });
+                                }
+                            });
+
+                        col.Item().Height(14);
+
+                        // Tabla
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(cols =>
+                            {
+                                cols.RelativeColumn(3);    // Estudiante
+                                cols.RelativeColumn(2);    // Grupo
+                                cols.RelativeColumn(2.5f); // Redil(es)
+                                cols.RelativeColumn(1.2f); // Tipo
+                                cols.RelativeColumn(1.5f); // Asistencia
+                            });
+
+                            table.Header(header =>
+                            {
+                                IContainer HeaderCell(IContainer c) =>
+                                    c.Background(Color.FromHex("#1e3a5f")).Padding(6).AlignMiddle();
+
+                                header.Cell().Element(HeaderCell).Text("Estudiante").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Element(HeaderCell).Text("Grupo").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Element(HeaderCell).Text("Redil(es)").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Element(HeaderCell).Text("Tipo").Bold().FontColor(Colors.White).FontSize(9);
+                                header.Cell().Element(HeaderCell).AlignRight().Text("Asistencia (%)").Bold().FontColor(Colors.White).FontSize(9);
+                            });
+
+                            var rowIndex = 0;
+                            foreach (var stat in allStats)
+                            {
+                                var bg = Color.FromHex(rowIndex++ % 2 == 0 ? "#ffffff" : "#f3f4f6");
+
+                                table.Cell().Background(bg).Padding(5).Text(stat.Name).FontSize(9);
+                                table.Cell().Background(bg).Padding(5).Text(stat.GroupName).FontSize(9);
+                                table.Cell().Background(bg).Padding(5).Text(string.Join(", ", stat.Rediles)).FontSize(9);
+                                table.Cell().Background(bg).Padding(5).Text(stat.IsServer ? "Servidor" : "Pueblo").FontSize(9);
+                                table.Cell().Background(bg).Padding(5).AlignRight().Text($"{stat.AttendancePercentage}%").FontSize(9);
+                            }
+                        });
+                    });
+
+                    // Pie de página
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("Página ").FontSize(8).FontColor(Color.FromHex("#6b7280"));
+                        x.CurrentPageNumber().FontSize(8).FontColor(Color.FromHex("#6b7280"));
+                        x.Span(" de ").FontSize(8).FontColor(Color.FromHex("#6b7280"));
+                        x.TotalPages().FontSize(8).FontColor(Color.FromHex("#6b7280"));
+                    });
+                });
+            });
+
+            return document.GeneratePdf();
         }
     }
 }

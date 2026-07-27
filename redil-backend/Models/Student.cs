@@ -14,8 +14,11 @@ public partial class Student
     [Required, MaxLength(100)]
     public string Name { get; set; } = null!;
 
-    [Required, MaxLength(100)]
-    public string Email { get; set; } = null!;
+    [MaxLength(100)]
+    public string? Email { get; set; }
+
+    [MaxLength(20)]
+    public string? Phone { get; set; }
 
     public bool IsServer { get; set; }
 
