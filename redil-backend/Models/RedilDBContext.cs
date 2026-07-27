@@ -40,7 +40,7 @@ namespace redil_backend.Models
                 .IsUnique();
 
             modelBuilder.Entity<Student>()
-                .HasIndex(s => s.Email)
+                .HasIndex(s => s.Phone)
                 .IsUnique();
 
             modelBuilder.Entity<StudentRedil>()

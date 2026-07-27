@@ -15,7 +15,10 @@ namespace redil_backend.Repository.Redil
         }
 
         public async Task<IEnumerable<RedilListDto>> GetAllRediles() =>
-            await _context.Rediles.AsNoTracking().Select(r => new RedilListDto(r.Id, r.Name)).ToListAsync();
+            await _context.Rediles.AsNoTracking()
+                .OrderBy(r => r.NumCourse)
+                .Select(r => new RedilListDto(r.Id, r.Name, r.NumCourse))
+                .ToListAsync();
 
         public async Task Add(Redile redil) =>
             await _context.Rediles.AddAsync(redil);
@@ -26,7 +29,7 @@ namespace redil_backend.Repository.Redil
                 .Include(r => r.Users)
                 .Where(r => r.Id == id)
                 .Select(r => new RedilDetailsDto(
-                    r.Id, r.Name, r.Description ?? "", r.Code,
+                    r.Id, r.Name, r.Description ?? "", r.Code, r.NumCourse,
                     r.Users.Where(u => u.IsActive)
                             .Select(u => new RedilTeacherList(u.Id, u.Name, u.Email)
                 )))

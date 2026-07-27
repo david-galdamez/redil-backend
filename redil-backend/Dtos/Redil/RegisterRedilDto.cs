@@ -1,4 +1,4 @@
-﻿namespace redil_backend.Dtos.Redil
+namespace redil_backend.Dtos.Redil
 {
-    public record RegisterRedilDto(string Name, string Description);
+    public record RegisterRedilDto(string Name, string? Description, int NumCourse);
 }

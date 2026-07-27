@@ -1,4 +1,4 @@
-﻿namespace redil_backend.Dtos.Redil
+namespace redil_backend.Dtos.Redil
 {
-    public record RedilClassStatDto(string Name, string GroupName, string RedilName, bool IsServer, float AttendancePercentage);
+    public record RedilClassStatDto(string Name, string GroupName, IReadOnlyList<string> Rediles, bool IsServer, float AttendancePercentage);
 }

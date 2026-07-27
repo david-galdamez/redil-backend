@@ -38,6 +38,7 @@ namespace redil_backend.Mappers
             {
                 Name = registerRedilDto.Name,
                 Description = registerRedilDto.Description,
+                NumCourse = registerRedilDto.NumCourse,
             };
         }
 
@@ -57,6 +58,7 @@ namespace redil_backend.Mappers
             return new Student
             {
                 Name = registerStudentDto.Name,
+                Phone = registerStudentDto.Phone,
                 Email = registerStudentDto.Email,
                 GroupId = registerStudentDto.GroupId,
                 IsServer = registerStudentDto.IsServer,

@@ -1,4 +1,4 @@
-﻿namespace redil_backend.Dtos.Redil
+namespace redil_backend.Dtos.Redil
 {
-    public record RedilListDto(int Id, string Name);
+    public record RedilListDto(int Id, string Name, int NumCourse);
 }
