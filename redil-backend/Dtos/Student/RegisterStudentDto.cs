@@ -1,4 +1,4 @@
-﻿namespace redil_backend.Dtos.Student
+namespace redil_backend.Dtos.Student
 {
-    public record RegisterStudentDto(string Name, string Email, bool IsServer, int GroupId);
+    public record RegisterStudentDto(string Name, string Phone, bool IsServer, int GroupId, string? Email = null);
 }

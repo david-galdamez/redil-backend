@@ -34,6 +34,8 @@ using redil_backend.Validators.Teacher;
 using System.Security.Claims;
 using System.Text;
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

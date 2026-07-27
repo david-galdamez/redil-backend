@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using redil_backend.Models;
@@ -11,9 +12,11 @@ using redil_backend.Models;
 namespace redil_backend.Migrations
 {
     [DbContext(typeof(RedilDbContext))]
-    partial class RedilDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260726211923_AddNumCourseToRedil")]
+    partial class AddNumCourseToRedil
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,6 +194,7 @@ namespace redil_backend.Migrations
                         .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -205,19 +209,15 @@ namespace redil_backend.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GroupId");
-
-                    b.HasIndex("Phone")
+                    b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("GroupId");
 
                     b.ToTable("students");
                 });

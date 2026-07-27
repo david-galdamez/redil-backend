@@ -13,6 +13,9 @@ namespace redil_backend.Validators.Redil
 
             RuleFor(r => r.Description)
                 .MaximumLength(255).WithMessage("La descripción del redil no puede exceder los 255 caracteres.");
+
+            RuleFor(r => r.NumCourse)
+                .GreaterThan(0).WithMessage("El número de curso debe ser mayor a 0.");
         }
     }
 }

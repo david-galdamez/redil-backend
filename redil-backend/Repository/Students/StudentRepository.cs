@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using redil_backend.Dtos;
-using redil_backend.Dtos.Classes;
 using redil_backend.Dtos.Student;
 using redil_backend.Models;
-using redil_backend.Repository.Students;
 
 namespace redil_backend.Repository.Students
 {
@@ -21,27 +18,28 @@ namespace redil_backend.Repository.Students
         public async Task Add(Student student) =>
             await _context.Students.AddAsync(student);
 
-        public async Task<Student?> GetStudentByEmail(string email) =>
-            await _context.Students.Where(s => 
-            s.Email.Equals(email)).FirstOrDefaultAsync();
+        public async Task<Student?> GetStudentByPhone(string phone) =>
+            await _context.Students
+                .Where(s => s.Phone != null && s.Phone.Equals(phone.Trim()))
+                .FirstOrDefaultAsync();
 
-        public async Task<Student?> GetStudentByEmail(string email, int redilId)
+        public async Task<Student?> GetStudentByPhone(string phone, int redilId)
         {
-            email = email.Trim().ToLower();
+            phone = phone.Trim();
 
             return await _context.StudentRediles
                 .Where(sr => sr.RedilId == redilId && sr.Active)
                 .Select(sr => sr.Student)
-                .Where(s => s.Email.ToLower().Equals(email))
+                .Where(s => s.Phone != null && s.Phone.Equals(phone))
                 .FirstOrDefaultAsync();
         }
 
         public async Task<PaginatedResponse<StudentListDto>> GetStudentsByRedilId(int redilId, int page, string search)
         {
             var query = _context.StudentRediles
-                    .Where(sr => sr.RedilId == redilId && sr.Active);
+                .Where(sr => sr.RedilId == redilId && sr.Active);
 
-            if(!search.IsNullOrEmpty())
+            if (!search.IsNullOrEmpty())
             {
                 query = query.Where(sr => sr.Student.Name.ToLower().Contains(search.ToLower()));
             }
@@ -49,11 +47,8 @@ namespace redil_backend.Repository.Students
             query = query.OrderByDescending(sr => sr.Id);
 
             var pageSize = 10;
-
             var totalRecords = await query.CountAsync();
-
             var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
-
             var recordsToSkip = (page - 1) * pageSize;
 
             var data = await query
@@ -63,8 +58,8 @@ namespace redil_backend.Repository.Students
                     c.Id,
                     c.Student.Name,
                     c.Student.Group.Name,
-                    c.Student.IsServer
-                ))
+                    c.Student.Phone,
+                    c.Student.IsServer))
                 .ToListAsync();
 
             return new PaginatedResponse<StudentListDto>
@@ -75,7 +70,6 @@ namespace redil_backend.Repository.Students
                 CurrentPage = page,
                 TotalPages = totalPages
             };
-
         }
 
         public async Task Save() =>
@@ -87,7 +81,7 @@ namespace redil_backend.Repository.Students
             _context.Entry(student).State = EntityState.Modified;
         }
 
-        public async Task<bool> ValidateStudent(string email) =>
-            await _context.Students.AnyAsync(s => s.Email.Equals(email));
+        public async Task<bool> ValidateStudent(string phone) =>
+            await _context.Students.AnyAsync(s => s.Phone != null && s.Phone.Equals(phone.Trim()));
     }
 }

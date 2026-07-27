@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using redil_backend.Dtos.Classes;
 
 namespace redil_backend.Validators.Classes
@@ -7,9 +7,12 @@ namespace redil_backend.Validators.Classes
     {
         public RegisterAssistValidator()
         {
-            RuleFor(x => x.Email).NotEmpty().WithMessage("El correo electrónico es obligatorio.")
-                .EmailAddress().WithMessage("El correo electrónico no es válido.");
-            RuleFor(x => x.Attended).NotNull().WithMessage("El campo 'Attended' es obligatorio.");
+            RuleFor(x => x.Phone)
+                .NotEmpty().WithMessage("El número de teléfono es obligatorio.")
+                .MaximumLength(20).WithMessage("El número de teléfono no puede exceder 20 caracteres.");
+
+            RuleFor(x => x.Attended)
+                .NotNull().WithMessage("El campo 'Attended' es obligatorio.");
         }
     }
 }

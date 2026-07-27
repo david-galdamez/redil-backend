@@ -1,4 +1,4 @@
-﻿namespace redil_backend.Dtos.Classes
+namespace redil_backend.Dtos.Classes
 {
-        public record AssistStatusDto(string RedilName, string ClassDescription, DateTime classDate, IEnumerable<string> emails);
+    public record AssistStatusDto(string RedilName, string ClassDescription, DateTime ClassDate, IEnumerable<string> Phones);
 }

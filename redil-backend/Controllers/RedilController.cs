@@ -274,6 +274,69 @@ namespace redil_backend.Controllers
         }
 
         [Authorize(Roles = nameof(UserRole.Admin))]
+        [HttpPost("stats/export/pdf")]
+        public async Task<IActionResult> ExportRedilStatsPdf([FromBody] ClassStatsRequestDto classStatsRequest)
+        {
+            var validationResult = await _classStatsRequestValidator.ValidateAsync(classStatsRequest);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Errores de validacion.",
+                    Errors = validationResult.Errors.Select(e => new ApiError
+                    {
+                        Field = e.PropertyName,
+                        Message = e.ErrorMessage
+                    }).ToList()
+                });
+            }
+
+            string? redilName = null;
+            if (classStatsRequest.RedilId.HasValue)
+            {
+                var validRedil = await _redilService.RedilExists(classStatsRequest.RedilId.Value);
+                if (!validRedil)
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "Id del redil no existe."
+                    });
+                }
+                var redilResult = await _redilService.GetRedilById(classStatsRequest.RedilId.Value);
+                redilName = redilResult.Data?.Name;
+            }
+
+            string? groupName = null;
+            if (classStatsRequest.GroupId.HasValue)
+            {
+                var validGroup = await _groupService.ValidateGroup(classStatsRequest.GroupId.Value);
+                if (!validGroup.Success || !validGroup.Data)
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "Id del grupo no existe."
+                    });
+                }
+                var groupsResult = await _groupService.GetAllGroups();
+                groupName = groupsResult.Data?.FirstOrDefault(g => g.Id == classStatsRequest.GroupId.Value)?.Name;
+            }
+
+            var filters = new StatsExportFiltersDto(
+                classStatsRequest.FromDate,
+                classStatsRequest.ToDate,
+                redilName,
+                groupName,
+                classStatsRequest.Search);
+
+            var bytes = await _classService.GetRedilStatsPdfExport(classStatsRequest.RedilId, classStatsRequest, filters);
+
+            return File(bytes, "application/pdf", "estadisticas.pdf");
+        }
+
+        [Authorize(Roles = nameof(UserRole.Admin))]
         [HttpPost]
         public async Task<ActionResult<ApiResponse<RedilDto>>> RegisterRedil([FromBody]RegisterRedilDto registerRedilDto)
         {
